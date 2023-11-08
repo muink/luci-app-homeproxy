@@ -824,6 +824,13 @@ return view.extend({
 
 			return this.super('load', section_id);
 		}
+		so.validate = function(section_id, value) {
+			let arr = value.trim().split(' ');
+			if (arr.length > 1 && arr.includes('any-out'))
+				return _('Expecting: %s').format(_('If Any is selected, uncheck others'));
+
+			return true;
+		}
 		so.modalonly = true;
 
 		so = ss.option(form.ListValue, 'server', _('Server'),
