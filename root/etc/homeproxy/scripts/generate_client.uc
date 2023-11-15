@@ -735,6 +735,12 @@ if (!isEmpty(main_node)) {
 /* Routing rules end */
 
 /* Experimental start */
+config.experimental = {
+	cache_file: {
+		enabled: true,
+		path: HP_DIR + '/cache.db'
+	}
+};
 /* Clash API start */
 if (dashboard_repo) {
 	system('rm -rf ' + RUN_DIR + '/ui');
