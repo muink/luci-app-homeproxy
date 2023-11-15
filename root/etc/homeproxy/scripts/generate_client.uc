@@ -26,6 +26,7 @@ uci.load(uciconfig);
 const uciinfra = 'infra',
       ucimain = 'config',
       ucisub = 'subscription',
+      uciexp = 'experimental',
       ucicontrol = 'control';
 
 const ucidnssetting = 'dns',
@@ -80,6 +81,11 @@ if (routing_mode !== 'custom') {
 const proxy_mode = uci.get(uciconfig, ucimain, 'proxy_mode') || 'redirect_tproxy',
       ipv6_support = uci.get(uciconfig, ucimain, 'ipv6_support') || '0',
       default_interface = uci.get(uciconfig, ucicontrol, 'bind_interface');
+
+const clash_api_enabled = uci.get(uciconfig, uciexp, 'clash_api_enabled'),
+      dashboard_repo = uci.get(uciconfig, uciexp, 'dashboard_repo'),
+      clash_api_port = uci.get(uciconfig, uciexp, 'clash_api_port') || '9090',
+      clash_api_secret = uci.get(uciconfig, uciexp, 'clash_api_secret') || trim(readfile('/proc/sys/kernel/random/uuid'));
 
 const mixed_port = uci.get(uciconfig, uciinfra, 'mixed_port') || '5330';
 let self_mark, redirect_port, tproxy_port,
@@ -715,8 +721,29 @@ if (!isEmpty(main_node)) {
 	});
 
 	config.route.final = get_outbound(default_outbound);
-}
+};
 /* Routing rules end */
+
+/* Experimental start */
+/* Clash API start */
+if (dashboard_repo) {
+	system('rm -rf ' + RUN_DIR + '/ui');
+	const dashpkg = HP_DIR + '/resources/' + replace(dashboard_repo, '/', '_') + '.zip';
+	system('unzip -qo ' + dashpkg + ' -d ' + RUN_DIR + '/');
+	system('mv ' + RUN_DIR + '/*-gh-pages/ ' + RUN_DIR + '/ui/');
+}
+config.experimental = {
+	clash_api: {
+		external_controller: (clash_api_enabled === '1') ? '[::]:'+ clash_api_port : null,
+		external_ui: dashboard_repo ? RUN_DIR + '/ui' : null,
+		secret: clash_api_secret,
+		store_mode: true,
+		store_selected: true,
+		cache_file: HP_DIR + '/clash_cache.db'
+	}
+};
+/* Clash API end */
+/* Experimental end */
 
 system('mkdir -p ' + RUN_DIR);
 writefile(RUN_DIR + '/sing-box-c.json', sprintf('%.J\n', removeBlankAttrs(config)));
