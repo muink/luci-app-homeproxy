@@ -518,16 +518,18 @@ return view.extend({
 			o.value('wireguard', _('WireGuard'));
 		o.value('vless', _('VLESS'));
 		o.value('vmess', _('VMess'));
+		o.value('selector', _('Selector'));
+		o.value('urltest', _('URLTest'));
 		o.rmempty = false;
 
 		o = s.option(form.Value, 'address', _('Address'));
 		o.datatype = 'host';
-		o.depends({'type': 'direct', '!reverse': true});
+		o.depends({'type': /^(direct|selector|urltest)$/, '!reverse': true});
 		o.rmempty = false;
 
 		o = s.option(form.Value, 'port', _('Port'));
 		o.datatype = 'port';
-		o.depends({'type': 'direct', '!reverse': true});
+		o.depends({'type': /^(direct|selector|urltest)$/, '!reverse': true});
 		o.rmempty = false;
 
 		o = s.option(form.Value, 'username', _('Username'));
@@ -576,11 +578,13 @@ return view.extend({
 			_('Override the connection destination address.'));
 		o.datatype = 'host';
 		o.depends('type', 'direct');
+		o.modalonly = true;
 
 		o = s.option(form.Value, 'override_port', _('Override port'),
 			_('Override the connection destination port.'));
 		o.datatype = 'port';
 		o.depends('type', 'direct');
+		o.modalonly = true;
 
 		/* Hysteria (2) config start */
 		o = s.option(form.ListValue, 'hysteria_protocol', _('Protocol'));
@@ -812,6 +816,58 @@ return view.extend({
 		o.depends('type', 'vmess');
 		o.modalonly = true;
 		/* VMess config end */
+
+		/* Selector config start */
+		o = s.option(form.MultiValue, 'order', _('Outbounds'),
+			_('List of outbound tags.'));
+		o.value('direct-out', _('Direct'));
+		o.value('block-out', _('Block'));
+		for (var key in args.proxy_nodes)
+			o.value(key, args.proxy_nodes[key]);
+		o.depends('type', 'selector');
+		o.depends('type', 'urltest');
+		o.modalonly = true;
+
+		o = s.option(form.Value, 'default_selected', _('Default Outbound'),
+			_('The default outbound tag. The first outbound will be used if empty.'));
+		o.value('', _('Default'));
+		o.value('direct-out', _('Direct'));
+		o.value('block-out', _('Block'));
+		for (var key in args.proxy_nodes)
+			o.value(key, args.proxy_nodes[key]);
+		o.default = '';
+		o.depends('type', 'selector');
+		o.modalonly = true;
+		/* Selector config end */
+
+		/* URLTest config start */
+		o = s.option(form.Value, 'test_url', _('Test URL'),
+			_('The URL to test. https://www.gstatic.com/generate_204 will be used if empty.'));
+		o.value('', _('Default'));
+		o.default = 'http://cp.cloudflare.com/';
+		o.depends('type', 'urltest');
+		o.modalonly = true;
+
+		o = s.option(form.Value, 'interval', _('Interval'),
+			_('The test interval. 1m will be used if empty.'));
+		o.value('', _('Default'));
+		o.default = '15m';
+		o.depends('type', 'urltest');
+		o.modalonly = true;
+
+		o = s.option(form.Value, 'tolerance', _('Tolerance'),
+			_('The test tolerance in milliseconds. 50 will be used if empty.'));
+		o.datatype = 'uinteger';
+		o.depends('type', 'urltest');
+		o.modalonly = true;
+
+		o = s.option(form.Flag, 'interrupt_exist_connections', _('Interrupt existing connections'),
+			_('Interrupt existing connections when the selected outbound has changed.'));
+		o.default = o.disabled;
+		o.depends('type', 'selector');
+		o.depends('type', 'urltest');
+		o.modalonly = true;
+		/* URLTest config end */
 
 		/* Transport config start */
 		o = s.option(form.ListValue, 'transport', _('Transport'),
@@ -1204,17 +1260,20 @@ return view.extend({
 		/* Extra settings start */
 		o = s.option(form.Flag, 'tcp_fast_open', _('TCP fast open'));
 		o.default = o.disabled;
+		o.depends({'type': /^(selector|urltest)$/, '!reverse': true});
 		o.modalonly = true;
 
 		if (features.has_mptcp) {
 			o = s.option(form.Flag, 'tcp_multi_path', _('MultiPath TCP'));
 			o.default = o.disabled;
+			o.depends({'type': /^(selector|urltest)$/, '!reverse': true});
 			o.modalonly = true;
 		}
 
 		o = s.option(form.Flag, 'udp_fragment', _('UDP Fragment'),
 			_('Enable UDP fragmentation.'));
 		o.default = o.disabled;
+		o.depends({'type': /^(selector|urltest)$/, '!reverse': true});
 		o.modalonly = true;
 
 		o = s.option(form.Flag, 'udp_over_tcp', _('UDP over TCP'),
@@ -1242,13 +1301,24 @@ return view.extend({
 
 		m = new form.Map('homeproxy', _('Edit nodes'));
 
+		/* Cache all configured proxy nodes, they will be called multiple times */
+		var proxy_nodes = {};
+		uci.sections(data[0], 'node', (res) => {
+			var nodeaddr = ((res.type === 'direct') ? res.override_address : res.address) || '',
+			    nodeport = ((res.type === 'direct') ? res.override_port : res.port) || '';
+
+			proxy_nodes[res['.name']] =
+				String.format('[%s] %s', res.type, res.label || ((stubValidator.apply('ip6addr', nodeaddr) ?
+					String.format('[%s]', nodeaddr) : nodeaddr) + ':' + nodeport));
+		});
+
 		s = m.section(form.NamedSection, 'subscription', 'homeproxy');
 
 		/* Nodes settings start */
 		s.tab('node', _('Nodes'));
 
 		o = s.taboption('node', form.SectionValue, '_node', form.GridSection, 'node');
-		ss = this.render_node_options(o.subsection, data, {});
+		ss = this.render_node_options(o.subsection, data, {proxy_nodes});
 		ss.filter = function(section_id) {
 			return (uci.get(data[0], section_id, 'grouphash') ? false : true);
 		};
@@ -1263,7 +1333,7 @@ return view.extend({
 			s.tab(hash, name ? name : _('Group ') + order);
 
 			o = s.taboption(hash, form.SectionValue, '_sub_' + hash, form.GridSection, 'node');
-			ss = this.render_node_options(o.subsection, data, {"noimport": true});
+			ss = this.render_node_options(o.subsection, data, {proxy_nodes, "noimport": true});
 			ss.addremove = false;
 			ss.filter = function(section_id) {
 				return (uci.get(data[0], section_id, 'grouphash') === hash);

@@ -12,7 +12,7 @@ import { isnan } from 'math';
 import { cursor } from 'uci';
 
 import {
-	executeCommand, isEmpty, strToBool, strToInt,
+	executeCommand, calcStringCRC8, calcStringMD5, isEmpty, strToBool, strToInt,
 	removeBlankAttrs, validateHostname, validation,
 	HP_DIR, RUN_DIR
 } from 'homeproxy';
@@ -25,6 +25,7 @@ uci.load(uciconfig);
 
 const uciinfra = 'infra',
       ucimain = 'config',
+      ucisub = 'subscription',
       ucicontrol = 'control';
 
 const ucidnssetting = 'dns',
@@ -102,6 +103,25 @@ if (match(proxy_mode), /tun/) {
 		endpoint_independent_nat = uci.get(uciconfig, uciroutingsetting, 'endpoint_independent_nat');
 	}
 }
+
+let subs_info = {};
+{
+	const s = uci.get_all(uciconfig, ucisub);
+	let urls = s.subscription_url;
+	let names = s.subscription_name || [];
+	if (urls) {
+		for (let i = 0; i < length(urls); i++) {
+			subs_info[calcStringMD5(urls[i])] = {
+				"url": urls[i],
+				"name": names[i],
+				"order": i + 1
+			};
+		}
+	}
+}
+
+let checkedout_nodes = [],
+    nodes_tobe_checkedout = [];
 /* UCI config end */
 
 /* Config helper start */
@@ -129,13 +149,54 @@ function parse_dnsquery(strquery) {
 
 }
 
+function get_tag(cfg) {
+	if (isEmpty(cfg))
+		return null;
+
+	let node = {};
+	if (type(cfg) === 'object')
+		node = cfg;
+	else {
+		if (cfg in ['direct-out', 'block-out'])
+			return cfg;
+		else
+			node = uci.get_all(uciconfig, cfg);
+	}
+
+	const sub_info = subs_info[node.grouphash];
+	return node.label ? sprintf("%s%s", node.grouphash ? sprintf("[%s] ", sub_info ? (sub_info.name ? sub_info.name : 'Group' + sub_info.order) : calcStringCRC8(node.grouphash)) : '', node.label) : null;
+}
+
 function generate_outbound(node) {
 	if (type(node) !== 'object' || isEmpty(node))
 		return null;
 
+	push(checkedout_nodes, node['.name']);
+
+	if (node.type in ['selector', 'urltest']) {
+		let outbounds = [];
+		for (let order in node.order) {
+			push(outbounds, get_tag(order) || 'cfg-' + order + '-out');
+			if (!(order in ['direct-out', 'block-out']) && !(order in nodes_tobe_checkedout))
+				push(nodes_tobe_checkedout, order);
+		}
+		return {
+			type: node.type,
+			tag: get_tag(node) || 'cfg-' + node['.name'] + '-out',
+			/* Selector */
+			outbounds: outbounds,
+			default: node.default_selected ? (get_tag(node.default_selected) || 'cfg-' + node.default_selected + '-out') : null,
+			/* URLTest */
+			url: node.test_url,
+			interval: node.interval,
+			tolerance: strToInt(node.tolerance),
+			interrupt_exist_connections: strToBool(node.interrupt_exist_connections)
+		};
+	}
+
 	const outbound = {
 		type: node.type,
-		tag: 'cfg-' + node['.name'] + '-out',
+		tag: get_tag(node) || 'cfg-' + node['.name'] + '-out',
 		routing_mark: strToInt(self_mark),
 
 		server: node.address,
@@ -281,7 +342,7 @@ function get_outbound(cfg) {
 			if (isEmpty(node))
 				die(sprintf("%s's node is missing, please check your configuration.", cfg));
 			else
-				return 'cfg-' + node + '-out';
+				return get_tag(node) || 'cfg-' + node + '-out';
 		}
 	}
 }
@@ -524,10 +585,26 @@ if (!isEmpty(main_node)) {
 
 		const outbound = uci.get_all(uciconfig, cfg.node) || {};
 		push(config.outbounds, generate_outbound(outbound));
-		config.outbounds[length(config.outbounds)-1].domain_strategy = cfg.domain_strategy;
-		config.outbounds[length(config.outbounds)-1].bind_interface = cfg.bind_interface;
-		config.outbounds[length(config.outbounds)-1].detour = get_outbound(cfg.outbound);
+		const type = config.outbounds[length(config.outbounds)-1].type;
+		if (!(type in ['selector', 'urltest'])) {
+			config.outbounds[length(config.outbounds)-1].domain_strategy = cfg.domain_strategy;
+			config.outbounds[length(config.outbounds)-1].bind_interface = cfg.bind_interface;
+			config.outbounds[length(config.outbounds)-1].detour = get_outbound(cfg.outbound);
+		}
 	});
+/* Second level outbounds */
+while (length(nodes_tobe_checkedout) > 0) {
+	const oldarr = uniq(nodes_tobe_checkedout);
+
+	nodes_tobe_checkedout = [];
+	map(oldarr, (k) => {
+		if (!(k in checkedout_nodes)) {
+			const outbound = uci.get_all(uciconfig, k) || {};
+			push(config.outbounds, generate_outbound(outbound));
+			push(checkedout_nodes, k);
+		}
+	});
+}
 /* Outbound end */
 
 /* Routing rules start */
