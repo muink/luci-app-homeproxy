@@ -367,7 +367,7 @@ return view.extend({
 		]);
 	},
 
-	render_node_options: function(section, data) {
+	render_node_options: function(section, data, args) {
 		let s, o;
 		let main_node = uci.get(data[0], 'config', 'main_node');
 		let routing_mode = uci.get(data[0], 'config', 'routing_mode');
@@ -382,6 +382,7 @@ return view.extend({
 		s.sectiontitle = L.bind(hp.loadDefaultLabel, this, data[0]);
 		/* Import subscription links start */
 		/* Thanks to luci-app-shadowsocks-libev */
+		if (args?.noimport !== true) {
 		s.handleLinkImport = function() {
 			var textarea = new ui.Textarea();
 			ui.showModal(_('Import share links'), [
@@ -468,6 +469,7 @@ return view.extend({
 			}, [ _('Import share links') ]));
 
 			return el;
+		}
 		}
 		/* Import subscription links end */
 
@@ -1246,8 +1248,28 @@ return view.extend({
 		s.tab('node', _('Nodes'));
 
 		o = s.taboption('node', form.SectionValue, '_node', form.GridSection, 'node');
-		ss = this.render_node_options(o.subsection, data);
+		ss = this.render_node_options(o.subsection, data, {});
+		ss.filter = function(section_id) {
+			return (uci.get(data[0], section_id, 'grouphash') ? false : true);
+		};
 		/* Nodes settings end */
+
+		/* Node Group settings start */
+		for (var key in subs_info) {
+			let hash = key,
+				name = subs_info[key].name,
+				order = subs_info[key].order;
+
+			s.tab(hash, name ? name : _('Group ') + order);
+
+			o = s.taboption(hash, form.SectionValue, '_sub_' + hash, form.GridSection, 'node');
+			ss = this.render_node_options(o.subsection, data, {"noimport": true});
+			ss.addremove = false;
+			ss.filter = function(section_id) {
+				return (uci.get(data[0], section_id, 'grouphash') === hash);
+			};
+		};
+		/* Node Group settings end */
 
 		/* Subscriptions settings start */
 		s.tab('subscription', _('Subscriptions'));
