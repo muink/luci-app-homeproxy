@@ -12,7 +12,7 @@ import { isnan } from 'math';
 import { cursor } from 'uci';
 
 import {
-	executeCommand, calcStringCRC8, calcStringMD5, isEmpty, strToBool, strToInt,
+	executeCommand, shellQuote, calcStringCRC8, calcStringMD5, isEmpty, strToBool, strToInt,
 	removeBlankAttrs, validateHostname, validation,
 	HP_DIR, RUN_DIR
 } from 'homeproxy';
@@ -121,7 +121,9 @@ let subs_info = {};
 }
 
 let checkedout_nodes = [],
-    nodes_tobe_checkedout = [];
+    nodes_tobe_checkedout = [],
+    checkedout_groups = [],
+    groups_tobe_checkedout = [];
 /* UCI config end */
 
 /* Config helper start */
@@ -175,11 +177,21 @@ function generate_outbound(node) {
 
 	if (node.type in ['selector', 'urltest']) {
 		let outbounds = [];
+		for (let grouphash in node.group) {
+			const output = executeCommand(`/sbin/uci -q show ${shellQuote(uciconfig)} | /bin/grep "\.grouphash='*${shellQuote(grouphash)}'*" | /usr/bin/cut -f2 -d'.'`) || {};
+			if (!isEmpty(trim(output.stdout)))
+				for (let order in split(trim(output.stdout), /\n/))
+					push(outbounds, get_tag(order) || 'cfg-' + order + '-out');
+			if (!(grouphash in groups_tobe_checkedout))
+				push(groups_tobe_checkedout, grouphash);
+		}
 		for (let order in node.order) {
 			push(outbounds, get_tag(order) || 'cfg-' + order + '-out');
 			if (!(order in ['direct-out', 'block-out']) && !(order in nodes_tobe_checkedout))
 				push(nodes_tobe_checkedout, order);
 		}
+		if (length(outbounds) === 0)
+			push(outbounds, 'direct-out', 'block-out');
 		return {
 			type: node.type,
 			tag: get_tag(node) || 'cfg-' + node['.name'] + '-out',
@@ -602,6 +614,25 @@ while (length(nodes_tobe_checkedout) > 0) {
 			const outbound = uci.get_all(uciconfig, k) || {};
 			push(config.outbounds, generate_outbound(outbound));
 			push(checkedout_nodes, k);
+		}
+	});
+}
+while (length(groups_tobe_checkedout) > 0) {
+	const oldarr = uniq(groups_tobe_checkedout);
+	let newarr = [];
+
+	groups_tobe_checkedout = [];
+	map(oldarr, (k) => {
+		if (!(k in checkedout_groups)) {
+			push(newarr, k);
+			push(checkedout_groups, k);
+		}
+	});
+	const hashexp = regexp('^' + replace(replace(replace(sprintf("%J", newarr), /^\[(.*)\]$/g, "($1)"), /[" ]/g, ''), ',', '|') + '$', 'is');
+	uci.foreach(uciconfig, ucinode, (cfg) => {
+		if (!(cfg['.name'] in checkedout_nodes) && match(cfg?.grouphash, hashexp)) {
+			push(config.outbounds, generate_outbound(cfg));
+			push(checkedout_nodes, cfg['.name']);
 		}
 	});
 }

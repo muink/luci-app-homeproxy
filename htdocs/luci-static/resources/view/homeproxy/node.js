@@ -818,14 +818,21 @@ return view.extend({
 		/* VMess config end */
 
 		/* Selector config start */
+		o = s.option(form.MultiValue, 'group', _('Subscription Groups'),
+			_('List of subscription groups.'));
+		for (var key in args.subs_info)
+			o.value(key, args.subs_info[key].name || _('Group ') + args.subs_info[key].order);
+		o.depends('type', 'selector');
+		o.depends('type', 'urltest');
+		o.modalonly = true;
+
 		o = s.option(form.MultiValue, 'order', _('Outbounds'),
 			_('List of outbound tags.'));
 		o.value('direct-out', _('Direct'));
 		o.value('block-out', _('Block'));
 		for (var key in args.proxy_nodes)
 			o.value(key, args.proxy_nodes[key]);
-		o.depends('type', 'selector');
-		o.depends('type', 'urltest');
+		o.depends({'group': /^$/, 'type': /^(selector|urltest)$/});
 		o.modalonly = true;
 
 		o = s.option(form.Value, 'default_selected', _('Default Outbound'),
@@ -836,7 +843,7 @@ return view.extend({
 		for (var key in args.proxy_nodes)
 			o.value(key, args.proxy_nodes[key]);
 		o.default = '';
-		o.depends('type', 'selector');
+		o.depends({'group': /^$/, 'type': 'selector'});
 		o.modalonly = true;
 		/* Selector config end */
 
@@ -1338,7 +1345,7 @@ return view.extend({
 		s.tab('node', _('Nodes'));
 
 		o = s.taboption('node', form.SectionValue, '_node', form.GridSection, 'node');
-		ss = this.render_node_options(o.subsection, data, {proxy_nodes});
+		ss = this.render_node_options(o.subsection, data, {subs_info, proxy_nodes});
 		ss.filter = function(section_id) {
 			return (uci.get(data[0], section_id, 'grouphash') ? false : true);
 		};
@@ -1353,7 +1360,7 @@ return view.extend({
 			s.tab(hash, name ? name : _('Group ') + order);
 
 			o = s.taboption(hash, form.SectionValue, '_sub_' + hash, form.GridSection, 'node');
-			ss = this.render_node_options(o.subsection, data, {proxy_nodes, "noimport": true});
+			ss = this.render_node_options(o.subsection, data, {subs_info, proxy_nodes, "noimport": true});
 			ss.addremove = false;
 			ss.filter = function(section_id) {
 				return (uci.get(data[0], section_id, 'grouphash') === hash);
