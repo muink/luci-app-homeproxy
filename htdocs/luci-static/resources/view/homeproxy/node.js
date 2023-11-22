@@ -1301,6 +1301,23 @@ return view.extend({
 
 		m = new form.Map('homeproxy', _('Edit nodes'));
 
+		/* Cache all subscription info, they will be called multiple times */
+		var subs_info = {};
+		{
+			let s = uci.get(data[0], 'subscription');
+			let urls = s.subscription_url;
+			let names = s.subscription_name || [];
+			if (urls) {
+				for (var i = 0; i < urls.length; i++) {
+					subs_info[hp.calcStringMD5(urls[i])] = {
+						"url": urls[i],
+						"name": names[i],
+						"order": i + 1
+					};
+				}
+			}
+		};
+
 		/* Cache all configured proxy nodes, they will be called multiple times */
 		var proxy_nodes = {};
 		uci.sections(data[0], 'node', (res) => {
@@ -1308,7 +1325,10 @@ return view.extend({
 			    nodeport = ((res.type === 'direct') ? res.override_port : res.port) || '';
 
 			proxy_nodes[res['.name']] =
-				String.format('[%s] %s', res.type, res.label || ((stubValidator.apply('ip6addr', nodeaddr) ?
+				String.format('%s [%s] %s', res.grouphash ?
+					String.format('[%s]', subs_info[res.grouphash]?.name || (subs_info[res.grouphash]?.order ?
+					_('Group ') + subs_info[res.grouphash].order : res.grouphash)) : '',
+					res.type, res.label || ((stubValidator.apply('ip6addr', nodeaddr) ?
 					String.format('[%s]', nodeaddr) : nodeaddr) + ':' + nodeport));
 		});
 
