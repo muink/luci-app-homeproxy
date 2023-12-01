@@ -546,6 +546,14 @@ return view.extend({
 			_('Match user name.'));
 		so.modalonly = true;
 
+		so = ss.option(form.ListValue, 'clash_mode', _('Clash mode'),
+			_('Match clash mode.'));
+		so.value('', _('None'));
+		so.value('global', _('Global'));
+		so.value('rule', _('Rule'));
+		so.value('direct', _('Direct'));
+		so.modalonly = true;
+
 		so = ss.option(form.Flag, 'invert', _('Invert'),
 			_('Invert match result.'));
 		so.default = so.disabled;
@@ -821,6 +829,14 @@ return view.extend({
 
 		so = ss.option(form.DynamicList, 'user', _('User'),
 			_('Match user name.'));
+		so.modalonly = true;
+
+		so = ss.option(form.ListValue, 'clash_mode', _('Clash mode'),
+			_('Match clash mode.'));
+		so.value('', _('None'));
+		so.value('global', _('Global'));
+		so.value('rule', _('Rule'));
+		so.value('direct', _('Direct'));
 		so.modalonly = true;
 
 		so = ss.option(form.Flag, 'invert', _('Invert'),

@@ -488,6 +488,7 @@ if (!isEmpty(main_node)) {
 			process_name: cfg.process_name,
 			process_path: cfg.process_path,
 			user: cfg.user,
+			clash_mode: cfg.clash_mode,
 			invert: (cfg.invert === '1') || null,
 			outbound: get_outbound(cfg.outbound),
 			server: get_resolver(cfg.server),
@@ -707,6 +708,7 @@ if (!isEmpty(main_node)) {
 			process_name: cfg.process_name,
 			process_path: cfg.process_path,
 			user: cfg.user,
+			clash_mode: cfg.clash_mode,
 			invert: (cfg.invert === '1') || null,
 			outbound: get_outbound(cfg.outbound)
 		});
