@@ -1247,10 +1247,12 @@ return view.extend({
 		o.default = o.disabled;
 		o.rmempty = false;
 
-		o = s.taboption('subscription', form.ListValue, 'auto_update_time', _('Update time'));
-		for (var i = 0; i < 24; i++)
-			o.value(i, i + ':00');
-		o.default = '2';
+		o = s.taboption('subscription', form.Value, 'auto_update_expr', _('Cron expression'),
+			_('The default value is 2:00 every day'));
+		o.default = '0 2 * * *';
+		o.placeholder = '0 2 * * *';
+		o.rmempty = false;
+		o.retain = true;
 		o.depends('auto_update', '1');
 
 		o = s.taboption('subscription', form.Flag, 'update_via_proxy', _('Update via proxy'),
