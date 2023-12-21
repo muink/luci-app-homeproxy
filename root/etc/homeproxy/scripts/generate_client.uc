@@ -38,6 +38,7 @@ const uciroutingsetting = 'routing',
       uciroutingrule = 'routing_rule';
 
 const ucinode = 'node';
+const uciruleset = 'ruleset';
 
 const routing_mode = uci.get(uciconfig, ucimain, 'routing_mode') || 'bypass_mainland_china';
 
@@ -678,6 +679,7 @@ config.route = {
 			outbound: 'dns-out'
 		}
 	],
+	rule_set: [],
 	auto_detect_interface: isEmpty(default_interface) ? true : null,
 	default_interface: default_interface
 };
@@ -732,6 +734,24 @@ if (!isEmpty(main_node)) {
 
 	config.route.final = get_outbound(default_outbound);
 };
+
+/* Ruleset */
+if (routing_mode === 'custom') {
+	uci.foreach(uciconfig, uciruleset, (cfg) => {
+		if (cfg.enabled !== '1')
+			return null;
+
+		push(config.route.rule_set, {
+			type: cfg.type,
+			tag: cfg['.name'],
+			format: cfg.format,
+			path: cfg.path,
+			url: cfg.url,
+			download_detour: get_outbound(cfg.outbound),
+			update_interval: cfg.update_interval
+		});
+	});
+}
 /* Routing rules end */
 
 /* Experimental start */
