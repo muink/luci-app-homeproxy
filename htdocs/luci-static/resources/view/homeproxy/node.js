@@ -9,6 +9,7 @@
 'require fs';
 'require uci';
 'require ui';
+'require dom';
 'require view';
 
 'require homeproxy as hp';
@@ -443,12 +444,27 @@ return view.extend({
 			])
 		}
 		s.renderSectionAdd = function(extra_class) {
-			var el = form.GridSection.prototype.renderSectionAdd.apply(this, arguments),
+			var el = form.GridSection.prototype.renderSectionAdd.apply(this, [ extra_class ]),
+				selectEl = E('select', {
+					class: 'cbi-input-select',
+					change: L.bind(function(section, ev) {
+						var el = dom.parent(ev.target, '.cbi-section-create'),
+							button = el.querySelector('.cbi-section-create > .cbi-button-add'),
+							inputname = el.querySelector('.cbi-section-create-name').value || '';
+						var uciconfig = section.uciconfig || section.map.config;
+
+						button.toggleAttribute('disabled', inputname === '' || uci.get(uciconfig, ev.target.value + inputname));
+					}, this, s)
+				}, [
+					E('option', { value: 'node_' }, _('node')),
+					E('option', { value: 'sub_' }, _('sub'))
+				]),
 				nameEl = el.querySelector('.cbi-section-create-name');
 
 			ui.addValidator(nameEl, 'uciname', true, (v) => {
 				var button = el.querySelector('.cbi-section-create > .cbi-button-add');
 				var uciconfig = this.uciconfig || this.map.config;
+				var prefix = el.querySelector('.cbi-input-select').value;
 
 				if (!v) {
 					button.disabled = true;
@@ -456,11 +472,16 @@ return view.extend({
 				} else if (uci.get(uciconfig, v)) {
 					button.disabled = true;
 					return _('Expecting: %s').format(_('unique UCI identifier'));
+				} else if (uci.get(uciconfig, prefix + v)) {
+					button.disabled = true;
+					return _('Expecting: %s').format(_('unique label'));
 				} else {
 					button.disabled = null;
 					return true;
 				}
 			}, 'blur', 'keyup');
+
+			el.prepend(E('div', {}, selectEl));
 
 			el.appendChild(E('button', {
 				'class': 'cbi-button cbi-button-add',
@@ -469,6 +490,12 @@ return view.extend({
 			}, [ _('Import share links') ]));
 
 			return el;
+		}
+		s.handleAdd = function(ev, name) {
+			var selectEl = ev.target.parentElement.firstElementChild.firstElementChild,
+				prefix = selectEl.value;
+		
+			return form.GridSection.prototype.handleAdd.apply(section, [ ev, prefix + name ]);
 		}
 		}
 		/* Import subscription links end */
