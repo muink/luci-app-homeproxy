@@ -27,12 +27,15 @@ return view.extend({
 
 		/* Ruleset settings start */
 		s = m.section(form.GridSection, 'ruleset');
+		var prefmt = { 'prefix': 'rule_', 'suffix': '' };
 		s.addremove = true;
 		s.rowcolors = true;
 		s.sortable = true;
 		s.nodescriptions = true;
 		s.modaltitle = L.bind(hp.loadModalTitle, this, _('Ruleset'), _('Add a ruleset'), data[0]);
 		s.sectiontitle = L.bind(hp.loadDefaultLabel, this, data[0]);
+		s.renderSectionAdd = L.bind(hp.renderSectionAdd, this, s, prefmt);
+		s.handleAdd = L.bind(hp.handleAdd, this, s, prefmt);
 
 		o = s.option(form.Value, 'label', _('Label'));
 		o.load = L.bind(hp.loadDefaultLabel, this, data[0]);
