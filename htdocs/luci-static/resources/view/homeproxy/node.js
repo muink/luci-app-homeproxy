@@ -444,7 +444,7 @@ return view.extend({
 			])
 		}
 		s.renderSectionAdd = function(extra_class) {
-			var el = form.GridSection.prototype.renderSectionAdd.apply(this, [ extra_class ]),
+			var el = form.GridSection.prototype.renderSectionAdd.apply(this, arguments),
 				selectEl = E('select', {
 					class: 'cbi-input-select',
 					change: L.bind(function(section, ev) {
@@ -453,7 +453,10 @@ return view.extend({
 							inputname = el.querySelector('.cbi-section-create-name').value || '';
 						var uciconfig = section.uciconfig || section.map.config;
 
-						button.toggleAttribute('disabled', inputname === '' || uci.get(uciconfig, ev.target.value + inputname));
+						button.toggleAttribute('disabled',
+							!inputname ||
+							uci.get(uciconfig, inputname) ||
+							uci.get(uciconfig, ev.target.value + inputname));
 					}, this, s)
 				}, [
 					E('option', { value: 'node_' }, _('node')),
