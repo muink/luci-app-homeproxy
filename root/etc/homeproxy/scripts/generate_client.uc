@@ -84,6 +84,7 @@ const proxy_mode = uci.get(uciconfig, ucimain, 'proxy_mode') || 'redirect_tproxy
 
 const clash_api_enabled = uci.get(uciconfig, uciexp, 'clash_api_enabled'),
       nginx_support = uci.get(uciconfig, uciexp, 'nginx_support'),
+      clash_api_log_level = uci.get(uciconfig, uciexp, 'clash_api_log_level') || 'warn',
       dashboard_repo = uci.get(uciconfig, uciexp, 'dashboard_repo'),
       clash_api_port = uci.get(uciconfig, uciexp, 'clash_api_port') || '9090',
       clash_api_secret = uci.get(uciconfig, uciexp, 'clash_api_secret') || trim(readfile('/proc/sys/kernel/random/uuid'));
@@ -382,7 +383,7 @@ const config = {};
 /* Log */
 config.log = {
 	disabled: false,
-	level: 'warn',
+	level: (clash_api_enabled === '1') ? clash_api_log_level : 'warn',
 	output: RUN_DIR + '/sing-box-c.log',
 	timestamp: true
 };

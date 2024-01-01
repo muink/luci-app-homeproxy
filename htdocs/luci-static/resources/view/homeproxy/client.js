@@ -947,6 +947,16 @@ return view.extend({
 			return uci.set(data[0], section_id, 'nginx_support', features.hp_has_nginx ? value : null);
 		}
 
+		so = ss.option(form.ListValue, 'clash_api_log_level', _('Log level'));
+		so.value('trace', 'Trace');
+		so.value('debug', 'Debug');
+		so.value('info', 'Info');
+		so.value('warn', 'Warning');
+		so.value('error', 'Error');
+		so.value('fatal', 'Fatal');
+		so.value('panic', 'Panic');
+		so.default = 'warn';
+
 		so = ss.option(form.ListValue, 'dashboard_repo', _('Select Clash Dashboard'),
 			_('If the selected dashboard is <code>') + _('Not Installed') + _('</code>.<br/> you will need to check update via <code>') +
 			_('Service Status') + _('</code> » <code>') + _('Clash dashboard version') + _('</code>.'));
