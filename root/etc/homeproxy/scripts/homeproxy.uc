@@ -176,6 +176,22 @@ export function validation(datatype, data) {
 	const ret = system(`/sbin/validate_data ${shellQuote(datatype)} ${shellQuote(data)} 2>/dev/null`);
 	return (ret === 0);
 };
+
+export function filterCheck(name, filter_mode, filter_keywords) {
+	if (isEmpty(name) || isEmpty(filter_mode) || isEmpty(filter_keywords))
+		return false;
+
+	let ret = false;
+	for (let i in filter_keywords) {
+		const patten = regexp(i);
+		if (match(name, patten))
+			ret = true;
+	}
+	if (filter_mode === 'whitelist')
+		ret = !ret;
+
+	return ret;
+};
 /* String helper end */
 
 /* String parser start */

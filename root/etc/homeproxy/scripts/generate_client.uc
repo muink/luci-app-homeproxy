@@ -13,7 +13,7 @@ import { cursor } from 'uci';
 
 import {
 	executeCommand, shellQuote, calcStringCRC8, calcStringMD5, isEmpty, strToBool, strToInt,
-	removeBlankAttrs, validateHostname, validation,
+	removeBlankAttrs, validateHostname, validation, filterCheck,
 	HP_DIR, RUN_DIR
 } from 'homeproxy';
 
@@ -159,7 +159,7 @@ function parse_dnsquery(strquery) {
 
 }
 
-function get_tag(cfg) {
+function get_tag(cfg, failback_tag, filterable) {
 	if (isEmpty(cfg))
 		return null;
 
@@ -173,8 +173,13 @@ function get_tag(cfg) {
 			node = uci.get_all(uciconfig, cfg);
 	}
 
+	//filter check
+	if (!isEmpty(filterable))
+		if (filterCheck(node.label, filterable.filter_nodes, filterable.filter_keywords))
+			return null;
+
 	const sub_info = subs_info[node.grouphash];
-	return node.label ? sprintf("%s%s", node.grouphash ? sprintf("[%s] ", sub_info ? (sub_info.name ? sub_info.name : 'Group' + sub_info.order) : calcStringCRC8(node.grouphash)) : '', node.label) : null;
+	return node.label ? sprintf("%s%s", node.grouphash ? sprintf("[%s] ", sub_info ? (sub_info.name ? sub_info.name : 'Group' + sub_info.order) : calcStringCRC8(node.grouphash)) : '', node.label) : (failback_tag || null);
 }
 
 function generate_outbound(node) {
@@ -189,12 +194,12 @@ function generate_outbound(node) {
 			const output = executeCommand(`/sbin/uci -q show ${shellQuote(uciconfig)} | /bin/grep "\.grouphash='*${shellQuote(grouphash)}'*" | /usr/bin/cut -f2 -d'.'`) || {};
 			if (!isEmpty(trim(output.stdout)))
 				for (let order in split(trim(output.stdout), /\n/))
-					push(outbounds, get_tag(order) || 'cfg-' + order + '-out');
+					push(outbounds, get_tag(order, 'cfg-' + order + '-out', { "filter_nodes": node.filter_nodes, "filter_keywords": node.filter_keywords }));
 			if (!(grouphash in groups_tobe_checkedout))
 				push(groups_tobe_checkedout, grouphash);
 		}
 		for (let order in node.order) {
-			push(outbounds, get_tag(order) || 'cfg-' + order + '-out');
+			push(outbounds, get_tag(order, 'cfg-' + order + '-out', { "filter_nodes": node.filter_nodes, "filter_keywords": node.filter_keywords }));
 			if (!(order in ['direct-out', 'block-out']) && !(order in nodes_tobe_checkedout))
 				push(nodes_tobe_checkedout, order);
 		}
@@ -202,10 +207,10 @@ function generate_outbound(node) {
 			push(outbounds, 'direct-out', 'block-out');
 		return {
 			type: node.type,
-			tag: get_tag(node) || 'cfg-' + node['.name'] + '-out',
+			tag: get_tag(node, 'cfg-' + node['.name'] + '-out'),
 			/* Selector */
 			outbounds: outbounds,
-			default: node.default_selected ? (get_tag(node.default_selected) || 'cfg-' + node.default_selected + '-out') : null,
+			default: node.default_selected ? (get_tag(node.default_selected, 'cfg-' + node.default_selected + '-out')) : null,
 			/* URLTest */
 			url: node.test_url,
 			interval: node.interval,
@@ -216,7 +221,7 @@ function generate_outbound(node) {
 
 	const outbound = {
 		type: node.type,
-		tag: get_tag(node) || 'cfg-' + node['.name'] + '-out',
+		tag: get_tag(node, 'cfg-' + node['.name'] + '-out'),
 		routing_mark: strToInt(self_mark),
 
 		server: node.address,
@@ -362,7 +367,7 @@ function get_outbound(cfg) {
 			if (isEmpty(node))
 				die(sprintf("%s's node is missing, please check your configuration.", cfg));
 			else
-				return get_tag(node) || 'cfg-' + node + '-out';
+				return get_tag(node, 'cfg-' + node + '-out');
 		}
 	}
 }

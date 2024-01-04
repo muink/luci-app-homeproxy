@@ -875,6 +875,20 @@ return view.extend({
 		o.default = '';
 		o.depends({'group': /^$/, 'type': 'selector'});
 		o.modalonly = true;
+
+		o = s.option(form.ListValue, 'filter_nodes', _('Filter nodes'),
+			_('Drop/keep specific nodes from outbounds.'));
+		o.value('', _('Disable'));
+		o.value('blacklist', _('Blacklist mode'));
+		o.value('whitelist', _('Whitelist mode'));
+		o.default = '';
+		o.depends('type', 'selector');
+		o.modalonly = true;
+
+		o = s.option(form.DynamicList, 'filter_keywords', _('Filter keywords'),
+			_('Drop/keep nodes that contain the specific keywords. <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions">Regex</a> is supported.'));
+		o.depends({'filter_nodes': '', '!reverse': true});
+		o.modalonly = true;
 		/* Selector config end */
 
 		/* URLTest config start */
