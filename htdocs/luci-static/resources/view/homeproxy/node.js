@@ -1275,6 +1275,11 @@ return view.extend({
 			o.value('360', _('360'));
 			o.value('android', _('Android'));
 			o.value('chrome', _('Chrome'));
+			o.value('chrome_psk', _('Chrome PSK'));
+			o.value('chrome_psk_shuffle', _('Chrome PSK Shuffle'));
+			o.value('chrome_padding_psk_shuffle', _('Chrome Padding PSK Shuffle'));
+			o.value('chrome_pq', _('Chrome pq'));
+			o.value('chrome_pq_psk', _('Chrome pq PSK'));
 			o.value('edge', _('Edge'));
 			o.value('firefox', _('Firefox'));
 			o.value('ios', _('iOS'));
