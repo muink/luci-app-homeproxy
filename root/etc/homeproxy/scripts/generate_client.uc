@@ -217,6 +217,7 @@ function generate_outbound(node) {
 			url: node.test_url,
 			interval: node.interval,
 			tolerance: strToInt(node.tolerance),
+			idle_timeout: node.idle_timeout,
 			interrupt_exist_connections: strToBool(node.interrupt_exist_connections)
 		};
 	}

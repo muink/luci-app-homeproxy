@@ -900,15 +900,21 @@ return view.extend({
 		o.modalonly = true;
 
 		o = s.option(form.Value, 'interval', _('Interval'),
-			_('The test interval. 1m will be used if empty.'));
+			_('The test interval. <code>3m</code> will be used if empty.'));
 		o.value('', _('Default'));
-		o.default = '15m';
+		o.default = '10m';
 		o.depends('type', 'urltest');
 		o.modalonly = true;
 
 		o = s.option(form.Value, 'tolerance', _('Tolerance'),
 			_('The test tolerance in milliseconds. 50 will be used if empty.'));
 		o.datatype = 'uinteger';
+		o.depends('type', 'urltest');
+		o.modalonly = true;
+
+		o = s.option(form.Value, 'idle_timeout', _('Idle timeout'),
+			_('The idle timeout. <code>30m</code> will be used if empty.'));
+		o.default = '30m';
 		o.depends('type', 'urltest');
 		o.modalonly = true;
 
