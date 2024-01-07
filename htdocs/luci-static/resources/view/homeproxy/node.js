@@ -850,6 +850,7 @@ return view.extend({
 		/* Selector config start */
 		o = s.option(form.MultiValue, 'group', _('Subscription Groups'),
 			_('List of subscription groups.'));
+		o.value('null-grp', _('NULL'));
 		for (var key in args.subs_info)
 			o.value(key, args.subs_info[key].name || _('Group ') + args.subs_info[key].order);
 		o.depends('type', 'selector');
