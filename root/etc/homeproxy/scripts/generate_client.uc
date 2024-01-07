@@ -192,13 +192,15 @@ function generate_outbound(node) {
 
 	if (node.type in ['selector', 'urltest']) {
 		let outbounds = [];
-		for (let grouphash in node.group) {
-			const output = executeCommand(`/sbin/uci -q show ${shellQuote(uciconfig)} | /bin/grep "\.grouphash='*${shellQuote(grouphash)}'*" | /usr/bin/cut -f2 -d'.'`) || {};
-			if (!isEmpty(trim(output.stdout)))
-				for (let order in split(trim(output.stdout), /\n/))
-					push(outbounds, get_tag(order, 'cfg-' + order + '-out', { "filter_nodes": node.filter_nodes, "filter_keywords": node.filter_keywords }));
-			if (!(grouphash in groups_tobe_checkedout))
-				push(groups_tobe_checkedout, grouphash);
+		if (!('null-grp' in node.group)) {
+			for (let grouphash in node.group) {
+				const output = executeCommand(`/sbin/uci -q show ${shellQuote(uciconfig)} | /bin/grep "\.grouphash='*${shellQuote(grouphash)}'*" | /usr/bin/cut -f2 -d'.'`) || {};
+				if (!isEmpty(trim(output.stdout)))
+					for (let order in split(trim(output.stdout), /\n/))
+						push(outbounds, get_tag(order, 'cfg-' + order + '-out', { "filter_nodes": node.filter_nodes, "filter_keywords": node.filter_keywords }));
+				if (!(grouphash in groups_tobe_checkedout))
+					push(groups_tobe_checkedout, grouphash);
+			}
 		}
 		for (let order in node.order) {
 			push(outbounds, get_tag(order, 'cfg-' + order + '-out', { "filter_nodes": node.filter_nodes, "filter_keywords": node.filter_keywords }));
