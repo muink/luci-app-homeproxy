@@ -1279,21 +1279,21 @@ return view.extend({
 			o = s.option(form.ListValue, 'tls_utls', _('uTLS fingerprint'),
 				_('uTLS is a fork of "crypto/tls", which provides ClientHello fingerprinting resistance.'));
 			o.value('', _('Disable'));
-			o.value('360', _('360'));
-			o.value('android', _('Android'));
-			o.value('chrome', _('Chrome'));
-			o.value('chrome_psk', _('Chrome PSK'));
-			o.value('chrome_psk_shuffle', _('Chrome PSK Shuffle'));
-			o.value('chrome_padding_psk_shuffle', _('Chrome Padding PSK Shuffle'));
-			o.value('chrome_pq', _('Chrome pq'));
-			o.value('chrome_pq_psk', _('Chrome pq PSK'));
-			o.value('edge', _('Edge'));
-			o.value('firefox', _('Firefox'));
-			o.value('ios', _('iOS'));
-			o.value('qq', _('QQ'));
-			o.value('random', _('Random'));
-			o.value('randomized', _('Randomized'));
-			o.value('safari', _('Safari'));
+			o.value('360');
+			o.value('android');
+			o.value('chrome');
+			o.value('chrome_psk');
+			o.value('chrome_psk_shuffle');
+			o.value('chrome_padding_psk_shuffle');
+			o.value('chrome_pq');
+			o.value('chrome_pq_psk');
+			o.value('edge');
+			o.value('firefox');
+			o.value('ios');
+			o.value('qq');
+			o.value('random');
+			o.value('randomized');
+			o.value('safari');
 			o.depends({'tls': '1', 'type': /^((?!hysteria2?$).)+$/});
 			o.validate = function(section_id, value) {
 				if (section_id) {
@@ -1332,12 +1332,10 @@ return view.extend({
 		o.depends({'type': /^(selector|urltest)$/, '!reverse': true});
 		o.modalonly = true;
 
-		if (features.has_mptcp) {
-			o = s.option(form.Flag, 'tcp_multi_path', _('MultiPath TCP'));
-			o.default = o.disabled;
-			o.depends({'type': /^(selector|urltest)$/, '!reverse': true});
-			o.modalonly = true;
-		}
+		o = s.option(form.Flag, 'tcp_multi_path', _('MultiPath TCP'));
+		o.default = o.disabled;
+		o.depends({'type': /^(selector|urltest)$/, '!reverse': true});
+		o.modalonly = true;
 
 		o = s.option(form.Flag, 'udp_fragment', _('UDP Fragment'),
 			_('Enable UDP fragmentation.'));
