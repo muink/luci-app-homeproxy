@@ -171,7 +171,6 @@ start_service() {
 			procd_add_jail_mount "$RUN_DIR/sing-box-c.json"
 			procd_add_jail_mount_rw "$RUN_DIR/sing-box-c.log"
 			procd_add_jail_mount "$HP_DIR/certs/"
-			procd_add_jail_mount "$HP_DIR/ruleset/"
 			procd_add_jail_mount "/etc/ssl/"
 			procd_add_jail_mount "/etc/localtime"
 			procd_add_jail_mount "/etc/TZ"
