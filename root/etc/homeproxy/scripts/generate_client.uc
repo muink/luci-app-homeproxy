@@ -378,6 +378,16 @@ function get_outbound(cfg) {
 	}
 }
 
+function get_resolver(cfg) {
+	if (isEmpty(cfg))
+		return null;
+
+	if (cfg in ['default-dns', 'system-dns', 'block-dns'])
+		return cfg;
+	else
+		return 'cfg-' + cfg + '-dns';
+}
+
 function get_ruleset(cfg) {
 	if (isEmpty(cfg))
 		return null;
@@ -392,16 +402,6 @@ function get_ruleset(cfg) {
 		return rules;
 	} else
 		return 'cfg-' + cfg + '-rule';
-}
-
-function get_resolver(cfg) {
-	if (isEmpty(cfg))
-		return null;
-
-	if (cfg in ['default-dns', 'system-dns', 'block-dns'])
-		return cfg;
-	else
-		return 'cfg-' + cfg + '-dns';
 }
 /* Config helper end */
 
