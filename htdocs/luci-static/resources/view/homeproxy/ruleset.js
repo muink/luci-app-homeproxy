@@ -61,6 +61,7 @@ return view.extend({
 
 		o = s.option(form.Value, 'path', _('Path'));
 		o.datatype = 'file';
+		o.placeholder = '/etc/homeproxy/ruleset/example.json';
 		o.rmempty = false;
 		o.depends('type', 'local');
 		o.modalonly = true;
