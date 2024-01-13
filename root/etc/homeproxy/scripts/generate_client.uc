@@ -765,25 +765,26 @@ if (routing_mode === 'custom') {
 /* Routing rules end */
 
 /* Experimental start */
-config.experimental = {
-	cache_file: {
-		enabled: true,
-		path: HP_DIR + '/cache.db'
+if (routing_mode === 'custom') {
+	config.experimental = {
+		cache_file: {
+			enabled: true,
+			path: HP_DIR + '/cache.db'
+		}
+	};
+	/* Clash API */
+	if (dashboard_repo) {
+		system('rm -rf ' + RUN_DIR + '/ui');
+		const dashpkg = HP_DIR + '/resources/' + replace(dashboard_repo, '/', '_') + '.zip';
+		system('unzip -qo ' + dashpkg + ' -d ' + RUN_DIR + '/');
+		system('mv ' + RUN_DIR + '/*-gh-pages/ ' + RUN_DIR + '/ui/');
 	}
-};
-/* Clash API start */
-if (dashboard_repo) {
-	system('rm -rf ' + RUN_DIR + '/ui');
-	const dashpkg = HP_DIR + '/resources/' + replace(dashboard_repo, '/', '_') + '.zip';
-	system('unzip -qo ' + dashpkg + ' -d ' + RUN_DIR + '/');
-	system('mv ' + RUN_DIR + '/*-gh-pages/ ' + RUN_DIR + '/ui/');
+	config.experimental.clash_api = {
+		external_controller: (clash_api_enabled === '1') ? (nginx_support ? '[::1]:' : '[::]:') + clash_api_port : null,
+		external_ui: dashboard_repo ? RUN_DIR + '/ui' : null,
+		secret: clash_api_secret
+	};
 }
-config.experimental.clash_api = {
-	external_controller: (clash_api_enabled === '1') ? (nginx_support ? '[::1]:' : '[::]:') + clash_api_port : null,
-	external_ui: dashboard_repo ? RUN_DIR + '/ui' : null,
-	secret: clash_api_secret
-};
-/* Clash API end */
 /* Experimental end */
 
 system('mkdir -p ' + RUN_DIR);

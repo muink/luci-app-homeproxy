@@ -201,7 +201,7 @@ return view.extend({
 		s = m.section(form.NamedSection, 'config', 'homeproxy', _('Resources management'));
 		s.anonymous = true;
 
-		if (dashboard_repo !== '') {
+		if (routing_mode === 'custom' && dashboard_repo !== '') {
 			o = s.option(form.DummyValue, '_clash_dashboard_version', _('Clash dashboard version'));
 			o.cfgvalue = function() { return getResVersion(this, 'clash_dashboard', dashboard_repo) };
 			o.rawhtml = true;

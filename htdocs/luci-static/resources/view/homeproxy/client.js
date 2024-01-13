@@ -970,6 +970,7 @@ return view.extend({
 		/* Clash API settings start */
 		s.tab('clash', _('Clash API settings'));
 		o = s.taboption('clash', form.SectionValue, '_clash', form.NamedSection, 'experimental', 'homeproxy');
+		o.depends('routing_mode', 'custom');
 
 		ss = o.subsection;
 		so = ss.option(form.Flag, 'clash_api_enabled', _('Enable Clash API'));
