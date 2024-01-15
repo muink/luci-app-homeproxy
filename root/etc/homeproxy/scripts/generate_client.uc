@@ -192,9 +192,9 @@ function generate_outbound(node) {
 
 	if (node.type in ['selector', 'urltest']) {
 		let outbounds = [];
-		if (!('null-grp' in node.group)) {
-			for (let grouphash in node.group) {
-				const output = executeCommand(`/sbin/uci -q show ${shellQuote(uciconfig)} | /bin/grep "\.grouphash='*${shellQuote(grouphash)}'*" | /usr/bin/cut -f2 -d'.'`) || {};
+		for (let grouphash in node.group) {
+			if (!isEmpty(grouphash)) {
+				const output = executeCommand(`/sbin/uci -q show ${shellQuote(uciconfig)} | /bin/grep "\.grouphash='*${shellQuote(grouphash)}'*" | /usr/bin/cut -f2 -d'.'`) || 	{};
 				if (!isEmpty(trim(output.stdout)))
 					for (let order in split(trim(output.stdout), /\n/))
 						push(outbounds, get_tag(order, 'cfg-' + order + '-out', { "filter_nodes": node.filter_nodes, "filter_keywords": node.filter_keywords }));
@@ -392,16 +392,10 @@ function get_ruleset(cfg) {
 	if (isEmpty(cfg))
 		return null;
 
-	if (type(cfg) === 'array') {
-		if ('null-rule' in cfg)
-			return null;
-
-		let rules = [];
-		for (let i in cfg)
-			push(rules, get_ruleset(i));
-		return rules;
-	} else
-		return 'cfg-' + cfg + '-rule';
+	let rules = [];
+	for (let i in cfg)
+		push(rules, isEmpty(i) ? null : 'cfg-' + i + '-rule');
+	return rules;
 }
 /* Config helper end */
 
