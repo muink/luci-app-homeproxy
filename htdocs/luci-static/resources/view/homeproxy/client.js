@@ -524,8 +524,8 @@ return view.extend({
 		so.datatype = 'or(cidr, ipaddr)';
 		so.modalonly = true;
 
-		so = ss.option(form.Flag, 'source_ip_is_private', _('Source IP is Private'),
-			_('Match non-public source IP.'));
+		so = ss.option(form.Flag, 'source_ip_is_private', _('Private source IP'),
+			_('Match private source IP.'));
 		so.default = so.disabled;
 		so.rmempty = false;
 		so.modalonly = true;
@@ -535,8 +535,8 @@ return view.extend({
 		so.datatype = 'or(cidr, ipaddr)';
 		so.modalonly = true;
 
-		so = ss.option(form.Flag, 'ip_is_private', _('IP is Private'),
-			_('Match non-public IP.'));
+		so = ss.option(form.Flag, 'ip_is_private', _('Private IP'),
+			_('Match private IP.'));
 		so.default = so.disabled;
 		so.rmempty = false;
 		so.modalonly = true;
@@ -581,8 +581,8 @@ return view.extend({
 		so.value('direct', _('Direct'));
 		so.modalonly = true;
 
-		so = ss.option(form.MultiValue, 'rule_set', _('Ruleset'),
-			_('Match Rule Set.'));
+		so = ss.option(form.MultiValue, 'rule_set', _('Rule set'),
+			_('Match rule set.'));
 		so.load = function(section_id) {
 			delete this.keylist;
 			delete this.vallist;
@@ -597,8 +597,8 @@ return view.extend({
 		}
 		so.modalonly = true;
 
-		so = ss.option(form.Flag, 'rule_set_ipcidr_match_source', _('Ruleset ipcidr match source'),
-			_('Make <code>ipcidr</code> in rule sets match the source IP.'));
+		so = ss.option(form.Flag, 'rule_set_ipcidr_match_source', _('Match source IP via rule set'),
+			_('Make IP CIDR in rule set used to match the source IP.'));
 		so.default = so.disabled;
 		so.rmempty = false;
 		so.modalonly = true;
@@ -854,8 +854,8 @@ return view.extend({
 		so.datatype = 'or(cidr, ipaddr)';
 		so.modalonly = true;
 
-		so = ss.option(form.Flag, 'source_ip_is_private', _('Source IP is Private'),
-			_('Match non-public source IP.'));
+		so = ss.option(form.Flag, 'source_ip_is_private', _('Private source IP'),
+			_('Match private source IP.'));
 		so.default = so.disabled;
 		so.rmempty = false;
 		so.modalonly = true;
@@ -890,8 +890,8 @@ return view.extend({
 		so.value('direct', _('Direct'));
 		so.modalonly = true;
 
-		so = ss.option(form.MultiValue, 'rule_set', _('Ruleset'),
-			_('Match Rule Set.'));
+		so = ss.option(form.MultiValue, 'rule_set', _('Rule set'),
+			_('Match rule set.'));
 		so.load = function(section_id) {
 			delete this.keylist;
 			delete this.vallist;
@@ -967,8 +967,8 @@ return view.extend({
 		/* DNS rules end */
 		/* Custom routing settings end */
 
-		/* Rule Set settings start */
-		s.tab('ruleset', _('Rule Set'));
+		/* Rule set settings start */
+		s.tab('ruleset', _('Rule set'));
 		o = s.taboption('ruleset', form.SectionValue, '_ruleset', form.GridSection, 'ruleset');
 		o.depends('routing_mode', 'custom');
 
@@ -978,7 +978,7 @@ return view.extend({
 		ss.rowcolors = true;
 		ss.sortable = true;
 		ss.nodescriptions = true;
-		ss.modaltitle = L.bind(hp.loadModalTitle, this, _('Ruleset'), _('Add a ruleset'), data[0]);
+		ss.modaltitle = L.bind(hp.loadModalTitle, this, _('Rule set'), _('Add a rule set'), data[0]);
 		ss.sectiontitle = L.bind(hp.loadDefaultLabel, this, data[0]);
 		ss.renderSectionAdd = L.bind(hp.renderSectionAdd, this, ss, prefmt);
 		ss.handleAdd = L.bind(hp.handleAdd, this, ss, prefmt);
@@ -1000,8 +1000,8 @@ return view.extend({
 		so.rmempty = false;
 
 		so = ss.option(form.ListValue, 'format', _('Format'));
-		so.value('source', _('Source'));
-		so.value('binary', _('Binary'));
+		so.value('source', _('Source file'));
+		so.value('binary', _('Binary file'));
 		so.default = 'source';
 		so.rmempty = false;
 
@@ -1012,9 +1012,12 @@ return view.extend({
 		so.depends('type', 'local');
 		so.modalonly = true;
 
-		so = ss.option(form.Value, 'url', _('Ruleset URL'));
+		so = ss.option(form.Value, 'url', _('Rule set URL'));
 		so.validate = function(section_id, value) {
-			if (section_id && value) {
+			if (section_id) {
+				if (!value)
+					return _('Expecting: %s').format(_('non-empty value'));
+
 				try {
 					var url = new URL(value);
 					if (!url.hostname)
@@ -1032,7 +1035,7 @@ return view.extend({
 		so.modalonly = true;
 
 		so = ss.option(form.ListValue, 'outbound', _('Outbound'),
-			_('Tag of the outbound to download rule-set.'));
+			_('Tag of the outbound to download rule set.'));
 		so.load = function(section_id) {
 			delete this.keylist;
 			delete this.vallist;
@@ -1047,13 +1050,12 @@ return view.extend({
 		}
 		so.default = 'direct-out';
 		so.rmempty = false;
-		//so.editable = true;
 		so.depends('type', 'remote');
 
 		so = ss.option(form.Value, 'update_interval', _('Update interval'),
-			_('Update interval of Rule Set. <br/><code>1d</code> will be used if empty.'));
+			_('Update interval of rule set.<br/><code>1d</code> will be used if empty.'));
 		so.depends('type', 'remote');
-		/* Rule Set settings end */
+		/* Rule set settings end */
 
 		/* Clash API settings start */
 		s.tab('clash', _('Clash API settings'));
