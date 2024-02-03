@@ -196,9 +196,7 @@ function parseShareLink(uri, features) {
 				config.grpc_servicename = params.get('serviceName');
 				break;
 			case 'ws':
-				/* We don't parse "host" param when TLS is enabled, as some providers are abusing it (host vs sni)
-				 * config.ws_host = params.get('host') ? decodeURIComponent(params.get('host')) : null;
-				 */
+				config.ws_host = params.get('host') ? decodeURIComponent(params.get('host')) : null;
 				config.ws_path = params.get('path') ? decodeURIComponent(params.get('path')) : null;
 				if (config.ws_path && config.ws_path.includes('?ed=')) {
 					config.websocket_early_data_header = 'Sec-WebSocket-Protocol';
@@ -275,8 +273,7 @@ function parseShareLink(uri, features) {
 				}
 				break;
 			case 'ws':
-				/* We don't parse "host" param when TLS is enabled, as some providers are abusing it (host vs sni) */
-				config.ws_host = (config.tls !== '1' && params.get('host')) ? decodeURIComponent(params.get('host')) : null;
+				config.ws_host = params.get('host') ? decodeURIComponent(params.get('host')) : null;
 				config.ws_path = params.get('path') ? decodeURIComponent(params.get('path')) : null;
 				if (config.ws_path && config.ws_path.includes('?ed=')) {
 					config.websocket_early_data_header = 'Sec-WebSocket-Protocol';
@@ -295,7 +292,7 @@ function parseShareLink(uri, features) {
 			/* https://github.com/2dust/v2rayN/wiki/%E5%88%86%E4%BA%AB%E9%93%BE%E6%8E%A5%E6%A0%BC%E5%BC%8F%E8%AF%B4%E6%98%8E(ver-2) */
 			uri = JSON.parse(hp.decodeBase64Str(uri[1]));
 
-			if (uri.v !== '2')
+			if (uri.v != '2')
 				return null;
 			/* Unsupported protocols */
 			else if (uri.net === 'kcp')
@@ -333,8 +330,7 @@ function parseShareLink(uri, features) {
 				}
 				break;
 			case 'ws':
-				/* We don't parse "host" param when TLS is enabled, as some providers are abusing it (host vs sni) */
-				config.ws_host = (config.tls !== '1') ? uri.host : null;
+				config.ws_host = uri.host;
 				config.ws_path = uri.path;
 				if (config.ws_path && config.ws_path.includes('?ed=')) {
 					config.websocket_early_data_header = 'Sec-WebSocket-Protocol';
@@ -589,10 +585,6 @@ return view.extend({
 						var encmode = this.map.lookupOption('shadowsocks_encrypt_method', section_id)[0].formvalue(section_id);
 						if (encmode === 'none')
 							return true;
-						else if (encmode === '2022-blake3-aes-128-gcm')
-							return hp.validateBase64Key(24, section_id, value);
-						else if (['2022-blake3-aes-256-gcm', '2022-blake3-chacha20-poly1305'].includes(encmode))
-							return hp.validateBase64Key(44, section_id, value);
 					}
 					if (!value)
 						return _('Expecting: %s').format(_('non-empty value'));
