@@ -576,9 +576,9 @@ return view.extend({
 		so = ss.option(form.ListValue, 'clash_mode', _('Clash mode'),
 			_('Match clash mode.'));
 		so.value('', _('None'));
-		so.value('global', _('Global'));
-		so.value('rule', _('Rule'));
-		so.value('direct', _('Direct'));
+		so.value('Global');
+		so.value('Rule');
+		so.value('Direct');
 		so.modalonly = true;
 
 		so = ss.option(form.MultiValue, 'rule_set', _('Rule set'),
@@ -885,9 +885,9 @@ return view.extend({
 		so = ss.option(form.ListValue, 'clash_mode', _('Clash mode'),
 			_('Match clash mode.'));
 		so.value('', _('None'));
-		so.value('global', _('Global'));
-		so.value('rule', _('Rule'));
-		so.value('direct', _('Direct'));
+		so.value('Global');
+		so.value('Rule');
+		so.value('Direct');
 		so.modalonly = true;
 
 		so = ss.option(form.MultiValue, 'rule_set', _('Rule set'),
