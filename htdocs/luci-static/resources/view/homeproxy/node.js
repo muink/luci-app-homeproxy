@@ -1262,7 +1262,7 @@ return view.extend({
 			o.default = o.disabled;
 			o.modalonly = true;
 
-			o = s.option(form.Value, 'tls_ech_config', _('ECH config'));
+			o = s.option(form.DynamicList, 'tls_ech_config', _('ECH config'));
 			o.depends('tls_ech', '1');
 			o.modalonly = true;
 		}
