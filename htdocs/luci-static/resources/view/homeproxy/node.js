@@ -876,6 +876,7 @@ return view.extend({
 		o.value('whitelist', _('Whitelist mode'));
 		o.default = '';
 		o.depends('type', 'selector');
+		o.depends('type', 'urltest');
 		o.modalonly = true;
 
 		o = s.option(form.DynamicList, 'filter_keywords', _('Filter keywords'),
