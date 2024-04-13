@@ -21,6 +21,8 @@ define Package/luci-app-homeproxy/conffiles
 /etc/homeproxy/ruleset/
 /etc/homeproxy/resources/direct_list.txt
 /etc/homeproxy/resources/proxy_list.txt
+/etc/homeproxy/resources/clash_dashboard.ver
+/etc/homeproxy/resources/*.zip
 /etc/homeproxy/cache.db
 endef
 
