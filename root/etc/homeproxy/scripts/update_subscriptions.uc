@@ -31,7 +31,7 @@ const ucimain = 'config',
       ucisubscription = 'subscription';
 
 const allow_insecure = uci.get(uciconfig, ucisubscription, 'allow_insecure') || '0',
-      filter_mode = uci.get(uciconfig, ucisubscription, 'filter_nodes') || 'disabled',
+      filter_mode = uci.get(uciconfig, ucisubscription, 'filter_nodes') || 'nil',
       filter_keywords = uci.get(uciconfig, ucisubscription, 'filter_keywords') || [],
       packet_encoding = uci.get(uciconfig, ucisubscription, 'packet_encoding') || 'xudp',
       subscription_urls = uci.get(uciconfig, ucisubscription, 'subscription_url') || [],

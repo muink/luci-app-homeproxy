@@ -54,7 +54,7 @@ config homeproxy 'subscription'
 	option allow_insecure '0'
 	option packet_encoding 'xudp'
 	option update_via_proxy '0'
-	option filter_nodes 'disabled'
+	option filter_nodes ''
 
 config homeproxy 'server'
 	option enabled '0'

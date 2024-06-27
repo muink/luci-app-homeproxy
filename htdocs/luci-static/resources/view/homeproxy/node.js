@@ -1465,16 +1465,15 @@ return view.extend({
 
 		o = s.taboption('subscription', form.ListValue, 'filter_nodes', _('Filter nodes'),
 			_('Drop/keep specific nodes from subscriptions.'));
-		o.value('disabled', _('Disable'));
+		o.value('', _('Disable'));
 		o.value('blacklist', _('Blacklist mode'));
 		o.value('whitelist', _('Whitelist mode'));
-		o.default = 'disabled';
-		o.rmempty = false;
+		o.default = '';
 
 		o = s.taboption('subscription', form.DynamicList, 'filter_keywords', _('Filter keywords'),
 			_('Drop/keep nodes that contain the specific keywords. <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions">Regex</a> is supported.'));
-		o.depends({'filter_nodes': 'disabled', '!reverse': true});
-		o.rmempty = false;
+		o.depends({'filter_nodes': '', '!reverse': true});
+		o.retain = true;
 
 		o = s.taboption('subscription', form.Flag, 'allow_insecure', _('Allow insecure'),
 			_('Allow insecure connection by default when add nodes from subscriptions.') +
