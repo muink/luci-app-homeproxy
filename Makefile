@@ -26,6 +26,8 @@ define Package/luci-app-homeproxy/conffiles
 /etc/homeproxy/cache.db
 endef
 
+PKG_UNPACK=$(CURDIR)/.prepare.sh $(PKG_NAME) $(CURDIR) $(PKG_BUILD_DIR)
+
 include $(TOPDIR)/feeds/luci/luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature
