@@ -74,7 +74,7 @@ check_clash_dashboard_update() {
 		log "[$(to_upper "$dashtype")] [$dashrepo] Local version: $local_dashdata_ver, latest version: $dashdata_ver."
 	fi
 
-	$wget "https://github.com/$dashrepo/archive/gh-pages.zip" -O "$RUN_DIR/$dashtype.zip"
+	$wget "https://codeload.github.com/$dashrepo/zip/refs/heads/gh-pages" -O "$RUN_DIR/$dashtype.zip"
 	if [ ! -s "$RUN_DIR/$dashtype.zip" ]; then
 		rm -f "$RUN_DIR/$dashtype.zip"
 		log "[$(to_upper "$dashtype")] [$dashrepo] Update failed."
