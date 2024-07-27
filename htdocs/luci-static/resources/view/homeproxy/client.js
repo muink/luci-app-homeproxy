@@ -67,10 +67,12 @@ function renderStatus(isRunning, args) {
 	var spanTemp = '<em><span style="color:%s"><strong>%s %s</strong></span></em>';
 	var renderHTML;
 	if (isRunning) {
-		var button = String.format('&#160;<a class="btn cbi-button-apply" href="%s" target="_blank" rel="noreferrer noopener">%s</a>',
-			(nginx ? 'https:' : 'http:') + '//' + window.location.hostname +
-			(nginx ? '/homeproxy' : ':' + args.api_port) + '/ui/', _('Open Clash Dashboard'));
-		renderHTML = spanTemp.format('green', _('HomeProxy'), _('RUNNING')) + button;
+		if (args.dashboard_repo) {
+			var button = String.format('&#160;<a class="btn cbi-button-apply" href="%s" target="_blank" rel="noreferrer noopener">%s</a>',
+				(nginx ? 'https:' : 'http:') + '//' + window.location.hostname +
+				(nginx ? '/homeproxy' : ':' + args.api_port) + '/ui/', _('Open Clash Dashboard'));
+		}
+		renderHTML = spanTemp.format('green', _('HomeProxy'), _('RUNNING')) + (button || '');
 	} else
 		renderHTML = spanTemp.format('red', _('HomeProxy'), _('NOT RUNNING'));
 
@@ -126,7 +128,8 @@ return view.extend({
 		    hosts = data[2]?.hosts,
 			api_port = uci.get(data[0], 'experimental', 'clash_api_port'),
 			api_secret = data[3]?.secret || '',
-			nginx_support = uci.get(data[0], 'experimental', 'nginx_support') || '0';
+			nginx_support = uci.get(data[0], 'experimental', 'nginx_support') || '0',
+			dashboard_repo = uci.get(data[0], 'experimental', 'dashboard_repo');
 
 		m = new form.Map('homeproxy', _('HomeProxy'),
 			_('The modern ImmortalWrt proxy platform for ARM64/AMD64.'));
@@ -136,7 +139,7 @@ return view.extend({
 			poll.add(function () {
 				return L.resolveDefault(getServiceStatus()).then((res) => {
 					var view = document.getElementById('service_status');
-					view.innerHTML = renderStatus(res, {features, nginx_support, api_port, api_secret});
+					view.innerHTML = renderStatus(res, {features, nginx_support, dashboard_repo, api_port, api_secret});
 				});
 			});
 
