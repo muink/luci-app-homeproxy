@@ -65,12 +65,26 @@ function getServiceStatus() {
 function renderStatus(isRunning, args) {
 	let nginx = args.features.hp_has_nginx && args.nginx_support === '1';
 	var spanTemp = '<em><span style="color:%s"><strong>%s %s</strong></span></em>';
+	var urlParams;
 	var renderHTML;
 	if (isRunning) {
+		if (args.set_dash_backend) {
+			switch (args.dashboard_repo) {
+				case 'metacubex/yacd-meta':
+					urlParams = String.format('?hostname=%s&port=%s&secret=%s', window.location.hostname, args.api_port, args.api_secret);
+					break;
+				case 'metacubex/metacubexd':
+					urlParams = String.format('#/setup?hostname=%s&port=%s&secret=%s', window.location.hostname, args.api_port, args.api_secret);
+					break;
+				default:
+					break;
+			}
+		}
 		if (args.dashboard_repo) {
 			var button = String.format('&#160;<a class="btn cbi-button-apply" href="%s" target="_blank" rel="noreferrer noopener">%s</a>',
 				(nginx ? 'https:' : 'http:') + '//' + window.location.hostname +
-				(nginx ? '/homeproxy' : ':' + args.api_port) + '/ui/', _('Open Clash Dashboard'));
+				(nginx ? '/homeproxy' : ':' + args.api_port) + '/ui/' + (urlParams || ''),
+				_('Open Clash Dashboard'));
 		}
 		renderHTML = spanTemp.format('green', _('HomeProxy'), _('RUNNING')) + (button || '');
 	} else
@@ -129,7 +143,8 @@ return view.extend({
 			api_port = uci.get(data[0], 'experimental', 'clash_api_port'),
 			api_secret = data[3]?.secret || '',
 			nginx_support = uci.get(data[0], 'experimental', 'nginx_support') || '0',
-			dashboard_repo = uci.get(data[0], 'experimental', 'dashboard_repo');
+			dashboard_repo = uci.get(data[0], 'experimental', 'dashboard_repo'),
+			set_dash_backend = uci.get(data[0], 'experimental', 'set_dash_backend');
 
 		m = new form.Map('homeproxy', _('HomeProxy'),
 			_('The modern ImmortalWrt proxy platform for ARM64/AMD64.'));
@@ -139,7 +154,7 @@ return view.extend({
 			poll.add(function () {
 				return L.resolveDefault(getServiceStatus()).then((res) => {
 					var view = document.getElementById('service_status');
-					view.innerHTML = renderStatus(res, {features, nginx_support, dashboard_repo, api_port, api_secret});
+					view.innerHTML = renderStatus(res, {features, nginx_support, dashboard_repo, set_dash_backend, api_port, api_secret});
 				});
 			});
 
@@ -1100,6 +1115,10 @@ return view.extend({
 					.format('http://' + window.location.hostname + ':' + api_port);
 			}
 		}
+
+		so = ss.option(form.Flag, 'set_dash_backend', _('Auto set backend'),
+			_('Auto set backend address for dashboard.'));
+		so.default = so.disabled;
 
 		so = ss.option(form.Value, 'clash_api_port', _('Port'));
 		so.datatype = "and(port, min(1))";
