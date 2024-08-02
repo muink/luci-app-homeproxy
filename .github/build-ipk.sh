@@ -6,7 +6,7 @@
 set -o errexit
 set -o pipefail
 
-if echo "$OSTYPE" | grep -q '^darwin*'; then
+if grep -q '^darwin*' <<< "$OSTYPE"; then
 	export PATH="$(brew --prefix)/opt/coreutils/libexec/gnubin:$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$(brew --prefix)/opt/findutils/libexec/gnubin:$(brew --prefix)/opt/gnu-tar/libexec/gnubin:$PATH"
 fi
 
