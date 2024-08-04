@@ -6,11 +6,11 @@
 
 'use strict';
 'require form';
-'require fs';
 'require network';
 'require poll';
 'require rpc';
 'require uci';
+'require ui';
 'require validation';
 'require view';
 
@@ -23,6 +23,12 @@ var callServiceList = rpc.declare({
 	method: 'list',
 	params: ['name'],
 	expect: { '': {} }
+});
+
+var callRcInit = rpc.declare({
+	object: 'rc',
+	method: 'init',
+	params: ['name', 'action']
 });
 
 var callReadDomainList = rpc.declare({
@@ -92,6 +98,17 @@ function renderStatus(isRunning, args) {
 		renderHTML = spanTemp.format('red', _('HomeProxy'), _('NOT RUNNING'));
 
 	return renderHTML;
+}
+
+function handleAction(action, ev) {
+	return callRcInit("homeproxy", action).then((ret) => {
+		if (ret)
+			throw _('Command failed');
+
+		return true;
+	}).catch((e) => {
+		ui.addNotification(null, E('p', _('Failed to execute "/etc/init.d/%s %s" action: %s').format("homeproxy", action, e)));
+	});
 }
 
 function validatePortRange(section_id, value) {
@@ -406,7 +423,7 @@ return view.extend({
 		so.inputtitle = _('Reload');
 		so.inputstyle = 'apply';
 		so.onclick = function() {
-			return fs.exec('/etc/init.d/homeproxy', ['reload']);
+			return handleAction('reload');
 		};
 		/* Routing settings end */
 

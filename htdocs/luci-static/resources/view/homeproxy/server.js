@@ -6,7 +6,6 @@
 
 'use strict';
 'require form';
-'require fs';
 'require poll';
 'require rpc';
 'require uci';
@@ -72,13 +71,6 @@ return view.extend({
 		}
 
 		s = m.section(form.NamedSection, 'server', 'homeproxy', _('Global settings'));
-
-		o = s.option(form.Button, '_reload_server', _('Quick Reload'));
-		o.inputtitle = _('Reload');
-		o.inputstyle = 'apply';
-		o.onclick = function() {
-			return fs.exec('/etc/init.d/homeproxy', ['reload']);
-		};
 
 		o = s.option(form.Flag, 'enabled', _('Enable'));
 		o.default = o.disabled;
