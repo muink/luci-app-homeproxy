@@ -1273,17 +1273,17 @@ return view.extend({
 
 		s = m.section(form.NamedSection, 'subscription', 'homeproxy');
 
-		/* Nodes settings start */
+		/* Node settings start */
+		/* User nodes start */
 		s.tab('node', _('Nodes'));
 
 		o = s.taboption('node', form.SectionValue, '_node', form.GridSection, 'node');
 		ss = render_node_options(o.subsection, data, {subs_info, proxy_nodes});
 		ss.filter = function(section_id) {
-			return (uci.get(data[0], section_id, 'grouphash') ? false : true);
-		};
+			return uci.get(data[0], section_id, 'grouphash') ? false : true;
+		}
 		/* Import subscription links start */
 		/* Thanks to luci-app-shadowsocks-libev */
-		if (args?.noimport !== true) {
 		ss.handleLinkImport = function() {
 			var textarea = new ui.Textarea();
 			ui.showModal(_('Import share links'), [
@@ -1400,11 +1400,10 @@ return view.extend({
 
 			return form.GridSection.prototype.handleAdd.apply(section, [ ev, prefix + name ]);
 		}
-		}
 		/* Import subscription links end */
-		/* Nodes settings end */
+		/* User nodes end */
 
-		/* Node Group settings start */
+		/* Subscription nodes start */
 		for (var key in subs_info) {
 			let hash = key,
 				name = subs_info[key].name,
@@ -1413,13 +1412,14 @@ return view.extend({
 			s.tab(hash, name ? name : _('Group ') + order);
 
 			o = s.taboption(hash, form.SectionValue, '_sub_' + hash, form.GridSection, 'node');
-			ss = render_node_options(o.subsection, data, {subs_info, proxy_nodes, "noimport": true});
+			ss = render_node_options(o.subsection, data, {subs_info, proxy_nodes});
 			ss.addremove = false;
 			ss.filter = function(section_id) {
 				return (uci.get(data[0], section_id, 'grouphash') === hash);
-			};
-		};
-		/* Node Group settings end */
+			}
+		}
+		/* Subscription nodes end */
+		/* Node settings end */
 
 		/* Subscriptions settings start */
 		s.tab('subscription', _('Subscriptions'));
