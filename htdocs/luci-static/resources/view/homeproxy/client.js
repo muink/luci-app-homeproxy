@@ -78,7 +78,7 @@ function renderStatus(isRunning, args) {
 		if (args.set_dash_backend) {
 			switch (args.dashboard_repo) {
 				case 'metacubex/metacubexd':
-					urlParams = String.format('?hostname=%s&port=%s&secret=%s', window.location.hostname, args.api_port, args.api_secret);
+					urlParams = String.format('#/setup?hostname=%s&port=%s&secret=%s', window.location.hostname, args.api_port, args.api_secret);
 					break;
 				case 'metacubex/yacd-meta':
 					urlParams = String.format('?hostname=%s&port=%s&secret=%s', window.location.hostname, args.api_port, args.api_secret);
