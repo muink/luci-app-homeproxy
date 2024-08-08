@@ -77,11 +77,14 @@ function renderStatus(isRunning, args) {
 	if (isRunning) {
 		if (args.set_dash_backend) {
 			switch (args.dashboard_repo) {
+				case 'metacubex/metacubexd':
+					urlParams = String.format('?hostname=%s&port=%s&secret=%s', window.location.hostname, args.api_port, args.api_secret);
+					break;
 				case 'metacubex/yacd-meta':
 					urlParams = String.format('?hostname=%s&port=%s&secret=%s', window.location.hostname, args.api_port, args.api_secret);
 					break;
-				case 'metacubex/metacubexd':
-					urlParams = String.format('#/setup?hostname=%s&port=%s&secret=%s', window.location.hostname, args.api_port, args.api_secret);
+				case 'metacubex/razord-meta':
+					urlParams = String.format('?host=%s&port=%s&secret=%s', window.location.hostname, args.api_port, args.api_secret);
 					break;
 				default:
 					break;
@@ -1093,8 +1096,9 @@ return view.extend({
 			delete this.vallist;
 
 			let repos = [
+				['metacubex/metacubexd', _('metacubexd')],
 				['metacubex/yacd-meta', _('yacd-meta')],
-				['metacubex/metacubexd', _('metacubexd')]
+				['metacubex/razord-meta', _('razord-meta')]
 			];
 
 			this.value('', _('Use Online Dashboard'));
