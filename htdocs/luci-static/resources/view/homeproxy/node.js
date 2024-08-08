@@ -709,7 +709,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode, su
 		_('List of subscription groups.'));
 	o.value('', _('-- Please choose --'));
 	for (var key in subs_info) {
-		let title = subs_info[key].name || subs_info[key].order.toString();
+		let title = subs_info[key].name;
 		o.value(key, _('Sub (%s)').format(title));
 	}
 	o.depends('type', 'selector');
@@ -1240,19 +1240,15 @@ return view.extend({
 		/* Cache all subscription info, they will be called multiple times */
 		var subs_info = {};
 		{
-			let s = uci.get(data[0], 'subscription');
-			let urls = s.subscription_url;
-			let names = s.subscription_name || [];
-			if (urls) {
-				for (var i = 0; i < urls.length; i++) {
-					subs_info[hp.calcStringMD5(urls[i])] = {
-						"url": urls[i],
-						"name": names[i],
-						"order": i + 1
-					};
-				}
+			for (var suburl of (uci.get(data[0], 'subscription', 'subscription_url') || [])) {
+				const url = new URL(suburl);
+				const urlhash = hp.calcStringMD5(suburl.replace(/#.*$/, ''));
+				subs_info[urlhash] = {
+					"url": suburl.replace(/#.*$/, ''),
+					"name": url.hash ? decodeURIComponent(url.hash.slice(1)) : url.hostname
+				};
 			}
-		};
+		}
 
 		/* Cache all configured proxy nodes, they will be called multiple times */
 		var proxy_nodes = {};
@@ -1262,8 +1258,7 @@ return view.extend({
 
 			proxy_nodes[res['.name']] =
 				String.format('%s [%s] %s', res.grouphash ?
-					String.format('[%s]', subs_info[res.grouphash]?.name || (subs_info[res.grouphash]?.order ?
-					_('Group ') + subs_info[res.grouphash].order : res.grouphash)) : '',
+					String.format('[%s]', subs_info[res.grouphash]?.name || res.grouphash) : '',
 					res.type, res.label || ((stubValidator.apply('ip6addr', nodeaddr) ?
 					String.format('[%s]', nodeaddr) : nodeaddr) + ':' + nodeport));
 		});
@@ -1404,7 +1399,7 @@ return view.extend({
 		/* Subscription nodes start */
 		for (var key in subs_info) {
 			const urlhash = key,
-				title = subs_info[key].name || subs_info[key].order.toString();
+				  title = subs_info[key].name;
 
 			s.tab('sub_' + urlhash, _('Sub (%s)').format(title));
 
@@ -1440,6 +1435,7 @@ return view.extend({
 
 		o = s.taboption('subscription', form.DynamicList, 'subscription_url', _('Subscription URL-s'),
 			_('Support Hysteria, Shadowsocks, Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.'));
+		o.placeholder = 'https://sub_url#sub_name';
 		o.validate = function(section_id, value) {
 			if (section_id && value) {
 				try {
@@ -1454,10 +1450,6 @@ return view.extend({
 
 			return true;
 		}
-
-		o = s.taboption('subscription', form.DynamicList, 'subscription_name', _('Subscription Name-s'),
-			_('Add name for Subscription URL, correspond in sequence.'));
-		o.datatype = 'uciname';
 
 		o = s.taboption('subscription', form.ListValue, 'filter_nodes', _('Filter nodes'),
 			_('Drop/keep specific nodes from subscriptions.'));
