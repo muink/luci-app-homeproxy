@@ -369,127 +369,6 @@ function render_node_options(section, data, args) {
 	s.nodescriptions = true;
 	s.modaltitle = L.bind(hp.loadModalTitle, this, _('Node'), _('Add a node'), data[0]);
 	s.sectiontitle = L.bind(hp.loadDefaultLabel, this, data[0]);
-	/* Import subscription links start */
-	/* Thanks to luci-app-shadowsocks-libev */
-	if (args?.noimport !== true) {
-	s.handleLinkImport = function() {
-		var textarea = new ui.Textarea();
-		ui.showModal(_('Import share links'), [
-			E('p', _('Support Hysteria, Shadowsocks, Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.')),
-			textarea.render(),
-			E('div', { class: 'right' }, [
-				E('button', {
-					class: 'btn',
-					click: ui.hideModal
-				}, [ _('Cancel') ]),
-				'',
-				E('button', {
-					class: 'btn cbi-button-action',
-					click: ui.createHandlerFn(this, function() {
-						var input_links = textarea.getValue().trim().split('\n');
-						if (input_links && input_links[0]) {
-							/* Remove duplicate lines */
-							input_links = input_links.reduce((pre, cur) =>
-								(!pre.includes(cur) && pre.push(cur), pre), []);
-
-							var allow_insecure = uci.get(data[0], 'subscription', 'allow_insecure');
-							var packet_encoding = uci.get(data[0], 'subscription', 'packet_encoding');
-							var imported_node = 0;
-							input_links.forEach((l) => {
-								var config = parseShareLink(l, features);
-								if (config) {
-									if (config.tls === '1' && allow_insecure === '1')
-										config.tls_insecure = '1'
-									if (['vless', 'vmess'].includes(config.type))
-										config.packet_encoding = packet_encoding
-
-									var nameHash = hp.calcStringMD5(config.label);
-									var sid = uci.add(data[0], 'node', nameHash);
-									Object.keys(config).forEach((k) => {
-										uci.set(data[0], sid, k, config[k]);
-									});
-									imported_node++;
-								}
-							});
-
-							if (imported_node === 0)
-								ui.addNotification(null, E('p', _('No valid share link found.')));
-							else
-								ui.addNotification(null, E('p', _('Successfully imported %s nodes of total %s.').format(
-									imported_node, input_links.length)));
-
-							return uci.save()
-								.then(L.bind(this.map.load, this.map))
-								.then(L.bind(this.map.reset, this.map))
-								.then(L.ui.hideModal)
-								.catch(function() {});
-						} else {
-							return ui.hideModal();
-						}
-					})
-				}, [ _('Import') ])
-			])
-		])
-	}
-	s.renderSectionAdd = function(extra_class) {
-		var el = form.GridSection.prototype.renderSectionAdd.apply(this, arguments),
-			selectEl = E('select', {
-				class: 'cbi-input-select',
-				change: L.bind(function(section, ev) {
-					var el = dom.parent(ev.target, '.cbi-section-create'),
-						button = el.querySelector('.cbi-section-create > .cbi-button-add'),
-						inputname = el.querySelector('.cbi-section-create-name').value || '';
-					var uciconfig = section.uciconfig || section.map.config;
-
-					button.toggleAttribute('disabled',
-						!inputname ||
-						uci.get(uciconfig, inputname) ||
-						uci.get(uciconfig, ev.target.value + inputname));
-				}, this, s)
-			}, [
-				E('option', { value: 'node_' }, _('node')),
-				E('option', { value: 'sub_' }, _('sub'))
-			]),
-			nameEl = el.querySelector('.cbi-section-create-name');
-
-		ui.addValidator(nameEl, 'uciname', true, (v) => {
-			var button = el.querySelector('.cbi-section-create > .cbi-button-add');
-			var uciconfig = this.uciconfig || this.map.config;
-			var prefix = el.querySelector('.cbi-input-select').value;
-
-			if (!v) {
-				button.disabled = true;
-				return true;
-			} else if (uci.get(uciconfig, v)) {
-				button.disabled = true;
-				return _('Expecting: %s').format(_('unique UCI identifier'));
-			} else if (uci.get(uciconfig, prefix + v)) {
-				button.disabled = true;
-				return _('Expecting: %s').format(_('unique label'));
-			} else {
-				button.disabled = null;
-				return true;
-			}
-		}, 'blur', 'keyup');
-
-		el.prepend(E('div', {}, selectEl));
-
-		el.appendChild(E('button', {
-			'class': 'cbi-button cbi-button-add',
-			'title': _('Import share links'),
-			'click': ui.createHandlerFn(this, 'handleLinkImport')
-		}, [ _('Import share links') ]));
-
-		return el;
-	}
-	s.handleAdd = function(ev, name) {
-		var selectEl = ev.target.parentElement.firstElementChild.firstElementChild,
-			prefix = selectEl.value;
-
-		return form.GridSection.prototype.handleAdd.apply(section, [ ev, prefix + name ]);
-	}
-	}
-	/* Import subscription links end */
 
 	if (routing_mode !== 'custom') {
 		o = s.option(form.Button, '_apply', _('Apply'));
@@ -1402,6 +1281,127 @@ return view.extend({
 		ss.filter = function(section_id) {
 			return (uci.get(data[0], section_id, 'grouphash') ? false : true);
 		};
+		/* Import subscription links start */
+		/* Thanks to luci-app-shadowsocks-libev */
+		if (args?.noimport !== true) {
+		ss.handleLinkImport = function() {
+			var textarea = new ui.Textarea();
+			ui.showModal(_('Import share links'), [
+				E('p', _('Support Hysteria, Shadowsocks, Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.')),
+				textarea.render(),
+				E('div', { class: 'right' }, [
+					E('button', {
+						class: 'btn',
+						click: ui.hideModal
+					}, [ _('Cancel') ]),
+					'',
+					E('button', {
+						class: 'btn cbi-button-action',
+						click: ui.createHandlerFn(this, function() {
+							var input_links = textarea.getValue().trim().split('\n');
+							if (input_links && input_links[0]) {
+								/* Remove duplicate lines */
+								input_links = input_links.reduce((pre, cur) =>
+									(!pre.includes(cur) && pre.push(cur), pre), []);
+
+								var allow_insecure = uci.get(data[0], 'subscription', 'allow_insecure');
+								var packet_encoding = uci.get(data[0], 'subscription', 'packet_encoding');
+								var imported_node = 0;
+								input_links.forEach((l) => {
+									var config = parseShareLink(l, features);
+									if (config) {
+										if (config.tls === '1' && allow_insecure === '1')
+											config.tls_insecure = '1'
+										if (['vless', 'vmess'].includes(config.type))
+											config.packet_encoding = packet_encoding
+
+										var nameHash = hp.calcStringMD5(config.label);
+										var sid = uci.add(data[0], 'node', nameHash);
+										Object.keys(config).forEach((k) => {
+											uci.set(data[0], sid, k, config[k]);
+										});
+										imported_node++;
+									}
+								});
+
+								if (imported_node === 0)
+									ui.addNotification(null, E('p', _('No valid share link found.')));
+								else
+									ui.addNotification(null, E('p', _('Successfully imported %s nodes of total %s.').format(
+										imported_node, input_links.length)));
+
+								return uci.save()
+									.then(L.bind(this.map.load, this.map))
+									.then(L.bind(this.map.reset, this.map))
+									.then(L.ui.hideModal)
+									.catch(function() {});
+							} else {
+								return ui.hideModal();
+							}
+						})
+					}, [ _('Import') ])
+				])
+			])
+		}
+		ss.renderSectionAdd = function(extra_class) {
+			var el = form.GridSection.prototype.renderSectionAdd.apply(this, arguments),
+				selectEl = E('select', {
+					class: 'cbi-input-select',
+					change: L.bind(function(section, ev) {
+						var el = dom.parent(ev.target, '.cbi-section-create'),
+							button = el.querySelector('.cbi-section-create > .cbi-button-add'),
+							inputname = el.querySelector('.cbi-section-create-name').value || '';
+						var uciconfig = section.uciconfig || section.map.config;
+
+						button.toggleAttribute('disabled',
+							!inputname ||
+							uci.get(uciconfig, inputname) ||
+							uci.get(uciconfig, ev.target.value + inputname));
+					}, this, ss)
+				}, [
+					E('option', { value: 'node_' }, _('node')),
+					E('option', { value: 'sub_' }, _('sub'))
+				]),
+				nameEl = el.querySelector('.cbi-section-create-name');
+
+			ui.addValidator(nameEl, 'uciname', true, (v) => {
+				var button = el.querySelector('.cbi-section-create > .cbi-button-add');
+				var uciconfig = this.uciconfig || this.map.config;
+				var prefix = el.querySelector('.cbi-input-select').value;
+
+				if (!v) {
+					button.disabled = true;
+					return true;
+				} else if (uci.get(uciconfig, v)) {
+					button.disabled = true;
+					return _('Expecting: %s').format(_('unique UCI identifier'));
+				} else if (uci.get(uciconfig, prefix + v)) {
+					button.disabled = true;
+					return _('Expecting: %s').format(_('unique label'));
+				} else {
+					button.disabled = null;
+					return true;
+				}
+			}, 'blur', 'keyup');
+
+			el.prepend(E('div', {}, selectEl));
+
+			el.appendChild(E('button', {
+				'class': 'cbi-button cbi-button-add',
+				'title': _('Import share links'),
+				'click': ui.createHandlerFn(this, 'handleLinkImport')
+			}, [ _('Import share links') ]));
+
+			return el;
+		}
+		ss.handleAdd = function(ev, name) {
+			var selectEl = ev.target.parentElement.firstElementChild.firstElementChild,
+				prefix = selectEl.value;
+
+			return form.GridSection.prototype.handleAdd.apply(section, [ ev, prefix + name ]);
+		}
+		}
+		/* Import subscription links end */
 		/* Nodes settings end */
 
 		/* Node Group settings start */
