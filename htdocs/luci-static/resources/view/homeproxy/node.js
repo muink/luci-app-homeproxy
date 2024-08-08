@@ -356,14 +356,8 @@ function parseShareLink(uri, features) {
 	return config;
 }
 
-function render_node_options(section, data, args) {
-	let s, o;
-	let main_node = uci.get(data[0], 'config', 'main_node');
-	let routing_mode = uci.get(data[0], 'config', 'routing_mode');
-	let features = data[1];
-
-	s = section;
-	s.addremove = true;
+function renderNodeSettings(section, data, features, main_node, routing_mode, subs_info, proxy_nodes) {
+	var s = section, o;
 	s.rowcolors = true;
 	s.sortable = true;
 	s.nodescriptions = true;
@@ -714,8 +708,8 @@ function render_node_options(section, data, args) {
 	o = s.option(form.MultiValue, 'group', _('Subscription Groups'),
 		_('List of subscription groups.'));
 	o.value('', _('-- Please choose --'));
-	for (var key in args.subs_info)
-		o.value(key, args.subs_info[key].name || _('Group ') + args.subs_info[key].order);
+	for (var key in subs_info)
+		o.value(key, subs_info[key].name || _('Group ') + subs_info[key].order);
 	o.depends('type', 'selector');
 	o.depends('type', 'urltest');
 	o.modalonly = true;
@@ -724,8 +718,8 @@ function render_node_options(section, data, args) {
 		_('List of outbound tags.'));
 	o.value('direct-out', _('Direct'));
 	o.value('block-out', _('Block'));
-	for (var key in args.proxy_nodes)
-		o.value(key, args.proxy_nodes[key]);
+	for (var key in proxy_nodes)
+		o.value(key, proxy_nodes[key]);
 	o.depends({'group': /^$/, 'type': /^(selector|urltest)$/});
 	o.modalonly = true;
 
@@ -734,8 +728,8 @@ function render_node_options(section, data, args) {
 	o.value('', _('Default'));
 	o.value('direct-out', _('Direct'));
 	o.value('block-out', _('Block'));
-	for (var key in args.proxy_nodes)
-		o.value(key, args.proxy_nodes[key]);
+	for (var key in proxy_nodes)
+		o.value(key, proxy_nodes[key]);
 	o.default = '';
 	o.depends({'group': /^$/, 'type': 'selector'});
 	o.modalonly = true;
@@ -1221,6 +1215,7 @@ function render_node_options(section, data, args) {
 	o.depends('udp_over_tcp', '1');
 	o.modalonly = true;
 	/* Extra settings end */
+
 	return s;
 }
 
@@ -1278,7 +1273,8 @@ return view.extend({
 		s.tab('node', _('Nodes'));
 
 		o = s.taboption('node', form.SectionValue, '_node', form.GridSection, 'node');
-		ss = render_node_options(o.subsection, data, {subs_info, proxy_nodes});
+		ss = renderNodeSettings(o.subsection, data, features, main_node, routing_mode, subs_info, proxy_nodes);
+		ss.addremove = true;
 		ss.filter = function(section_id) {
 			return uci.get(data[0], section_id, 'grouphash') ? false : true;
 		}
@@ -1412,8 +1408,7 @@ return view.extend({
 			s.tab(hash, name ? name : _('Group ') + order);
 
 			o = s.taboption(hash, form.SectionValue, '_sub_' + hash, form.GridSection, 'node');
-			ss = render_node_options(o.subsection, data, {subs_info, proxy_nodes});
-			ss.addremove = false;
+			ss = renderNodeSettings(o.subsection, data, features, main_node, routing_mode, subs_info, proxy_nodes);
 			ss.filter = function(section_id) {
 				return (uci.get(data[0], section_id, 'grouphash') === hash);
 			}
