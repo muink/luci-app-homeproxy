@@ -11,9 +11,11 @@ import { readfile, writefile } from 'fs';
 import { isnan } from 'math';
 import { cursor } from 'uci';
 
+import { urldecode } from 'luci.http';
+
 import {
 	executeCommand, shellQuote, calcStringCRC8, calcStringMD5, isEmpty, strToBool, strToInt,
-	removeBlankAttrs, validateHostname, validation, filterCheck,
+	removeBlankAttrs, parseURL, validateHostname, validation, filterCheck,
 	HP_DIR, RUN_DIR
 } from 'homeproxy';
 
@@ -125,17 +127,14 @@ if (match(proxy_mode), /tun/) {
 
 let subs_info = {};
 {
-	const s = uci.get_all(uciconfig, ucisub);
-	let urls = s.subscription_url;
-	let names = s.subscription_name || [];
-	if (urls) {
-		for (let i = 0; i < length(urls); i++) {
-			subs_info[calcStringMD5(urls[i])] = {
-				"url": urls[i],
-				"name": names[i],
-				"order": i + 1
-			};
-		}
+	const suburls = uci.get(uciconfig, ucisub, 'subscription_url') || [];
+	for (let i = 0; i < length(suburls); i++) {
+		const url = parseURL(suburls[i]);
+		const urlhash = calcStringMD5(replace(suburls[i], /#.*$/, ''));
+		subs_info[urlhash] = {
+			"url": replace(suburls[i], /#.*$/, ''),
+			"name": url.hash ? urldecode(url.hash) : url.hostname
+		};
 	}
 }
 
@@ -190,7 +189,10 @@ function get_tag(cfg, failback_tag, filterable) {
 			return null;
 
 	const sub_info = subs_info[node.grouphash];
-	return node.label ? sprintf("%s%s", node.grouphash ? sprintf("[%s] ", sub_info ? (sub_info.name ? sub_info.name : 'Group' + sub_info.order) : calcStringCRC8(node.grouphash)) : '', node.label) : (failback_tag || null);
+	return node.label ? sprintf("%s%s", node.grouphash ?
+		sprintf("[%s] ", sub_info ? sub_info.name : calcStringCRC8(node.grouphash)) : '',
+		node.label) :
+		(failback_tag || null);
 }
 
 function generate_outbound(node) {
