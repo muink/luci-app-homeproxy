@@ -398,7 +398,8 @@ return view.extend({
 		so.inputtitle = _('Reload');
 		so.inputstyle = 'apply';
 		so.onclick = function() {
-			return handleAction('reload');
+			return handleAction('reload')
+				.then((res) => { return window.location = window.location.href.split('#')[0] });
 		};
 		/* Routing settings end */
 
