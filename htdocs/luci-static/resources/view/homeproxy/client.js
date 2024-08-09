@@ -182,35 +182,10 @@ return view.extend({
 		}
 
 		/* Cache all subscription info, they will be called multiple times */
-		var subs_info = {};
-		{
-			let s = uci.get(data[0], 'subscription');
-			let urls = s.subscription_url;
-			let names = s.subscription_name || [];
-			if (urls) {
-				for (var i = 0; i < urls.length; i++) {
-					subs_info[hp.calcStringMD5(urls[i])] = {
-						"url": urls[i],
-						"name": names[i],
-						"order": i + 1
-					};
-				}
-			}
-		};
+		var subs_info = hp.loadSubscriptionInfo(data[0]);
 
 		/* Cache all configured proxy nodes, they will be called multiple times */
-		var proxy_nodes = {};
-		uci.sections(data[0], 'node', (res) => {
-			var nodeaddr = ((res.type === 'direct') ? res.override_address : res.address) || '',
-			    nodeport = ((res.type === 'direct') ? res.override_port : res.port) || '';
-
-			proxy_nodes[res['.name']] =
-				String.format('%s [%s] %s', res.grouphash ?
-					String.format('[%s]', subs_info[res.grouphash]?.name || (subs_info[res.grouphash]?.order ?
-					_('Group ') + subs_info[res.grouphash].order : res.grouphash)) : '',
-					res.type, res.label || ((stubValidator.apply('ip6addr', nodeaddr) ?
-					String.format('[%s]', nodeaddr) : nodeaddr) + ':' + nodeport));
-		});
+		var proxy_nodes = hp.loadNodesList(data[0], subs_info);
 
 		s = m.section(form.NamedSection, 'config', 'homeproxy');
 
@@ -218,8 +193,8 @@ return view.extend({
 
 		o = s.taboption('routing', form.ListValue, 'main_node', _('Main node'));
 		o.value('nil', _('Disable'));
-		for (var i in proxy_nodes)
-			o.value(i, proxy_nodes[i]);
+		for (var k in proxy_nodes)
+			o.value(k, proxy_nodes[k]);
 		o.default = 'nil';
 		o.depends({'routing_mode': 'custom', '!reverse': true});
 		o.rmempty = false;
@@ -227,8 +202,8 @@ return view.extend({
 		o = s.taboption('routing', form.ListValue, 'main_udp_node', _('Main UDP node'));
 		o.value('nil', _('Disable'));
 		o.value('same', _('Same as main node'));
-		for (var i in proxy_nodes)
-			o.value(i, proxy_nodes[i]);
+		for (var k in proxy_nodes)
+			o.value(k, proxy_nodes[k]);
 		o.default = 'nil';
 		o.depends({'routing_mode': /^((?!custom).)+$/, 'proxy_mode': /^((?!redirect$).)+$/});
 		o.rmempty = false;
@@ -454,8 +429,8 @@ return view.extend({
 
 		so = ss.option(form.ListValue, 'node', _('Node'),
 			_('Outbound node'));
-		for (var i in proxy_nodes)
-			so.value(i, proxy_nodes[i]);
+		for (var k in proxy_nodes)
+			so.value(k, proxy_nodes[k]);
 		so.validate = L.bind(hp.validateUniqueValue, this, data[0], 'routing_node', 'node');
 		so.editable = true;
 

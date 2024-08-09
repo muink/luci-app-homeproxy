@@ -1238,30 +1238,10 @@ return view.extend({
 		m = new form.Map('homeproxy', _('Edit nodes'));
 
 		/* Cache all subscription info, they will be called multiple times */
-		var subs_info = {};
-		{
-			for (var suburl of (uci.get(data[0], 'subscription', 'subscription_url') || [])) {
-				const url = new URL(suburl);
-				const urlhash = hp.calcStringMD5(suburl.replace(/#.*$/, ''));
-				subs_info[urlhash] = {
-					"url": suburl.replace(/#.*$/, ''),
-					"name": url.hash ? decodeURIComponent(url.hash.slice(1)) : url.hostname
-				};
-			}
-		}
+		var subs_info = hp.loadSubscriptionInfo(data[0]);
 
 		/* Cache all configured proxy nodes, they will be called multiple times */
-		var proxy_nodes = {};
-		uci.sections(data[0], 'node', (res) => {
-			var nodeaddr = ((res.type === 'direct') ? res.override_address : res.address) || '',
-			    nodeport = ((res.type === 'direct') ? res.override_port : res.port) || '';
-
-			proxy_nodes[res['.name']] =
-				String.format('%s [%s] %s', res.grouphash ?
-					String.format('[%s]', subs_info[res.grouphash]?.name || res.grouphash) : '',
-					res.type, res.label || ((stubValidator.apply('ip6addr', nodeaddr) ?
-					String.format('[%s]', nodeaddr) : nodeaddr) + ':' + nodeport));
-		});
+		var proxy_nodes = hp.loadNodesList(data[0], subs_info);
 
 		s = m.section(form.NamedSection, 'subscription', 'homeproxy');
 
