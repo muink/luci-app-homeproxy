@@ -708,8 +708,10 @@ function renderNodeSettings(section, data, features, main_node, routing_mode, su
 	o = s.option(form.MultiValue, 'group', _('Subscription Groups'),
 		_('List of subscription groups.'));
 	o.value('', _('-- Please choose --'));
-	for (var key in subs_info)
-		o.value(key, subs_info[key].name || _('Group ') + subs_info[key].order);
+	for (var key in subs_info) {
+		let title = subs_info[key].name || subs_info[key].order.toString();
+		o.value(key, _('Sub (%s)').format(title));
+	}
 	o.depends('type', 'selector');
 	o.depends('type', 'urltest');
 	o.modalonly = true;
@@ -1401,16 +1403,15 @@ return view.extend({
 
 		/* Subscription nodes start */
 		for (var key in subs_info) {
-			let hash = key,
-				name = subs_info[key].name,
-				order = subs_info[key].order;
+			const urlhash = key,
+				title = subs_info[key].name || subs_info[key].order.toString();
 
-			s.tab(hash, name ? name : _('Group ') + order);
+			s.tab('sub_' + urlhash, _('Sub (%s)').format(title));
 
-			o = s.taboption(hash, form.SectionValue, '_sub_' + hash, form.GridSection, 'node');
+			o = s.taboption('sub_' + urlhash, form.SectionValue, '_sub_' + urlhash, form.GridSection, 'node');
 			ss = renderNodeSettings(o.subsection, data, features, main_node, routing_mode, subs_info, proxy_nodes);
 			ss.filter = function(section_id) {
-				return (uci.get(data[0], section_id, 'grouphash') === hash);
+				return (uci.get(data[0], section_id, 'grouphash') === urlhash);
 			}
 		}
 		/* Subscription nodes end */
