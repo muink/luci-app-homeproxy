@@ -56,6 +56,9 @@ check_clash_dashboard_update() {
 	set_lock "set" "$dashtype"
 
 	local dashdata_ver="$($wget -O- "https://api.github.com/repos/$dashrepo/releases/latest" | jsonfilter -e "@.tag_name")"
+	[ -n "$dashdata_ver" ] || {
+		dashdata_ver="$($wget -O- "https://api.github.com/repos/$dashrepo/tags" | jsonfilter -e "@[*].name" | head -n1)"
+	}
 	if [ -z "$dashdata_ver" ]; then
 		log "[$(to_upper "$dashtype")] [$dashrepo] Failed to get the latest version, please retry later."
 
