@@ -1371,7 +1371,7 @@ return view.extend({
 			var selectEl = ev.target.parentElement.firstElementChild.firstElementChild,
 				prefix = selectEl.value;
 
-			return form.GridSection.prototype.handleAdd.apply(section, [ ev, prefix + name ]);
+			return form.GridSection.prototype.handleAdd.apply(this, [ ev, prefix + name ]);
 		}
 		/* Import subscription links end */
 		/* User nodes end */
