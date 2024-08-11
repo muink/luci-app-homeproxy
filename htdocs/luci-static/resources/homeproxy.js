@@ -220,7 +220,7 @@ return baseclass.extend({
 		return nodelist;
 	},
 
-	renderSectionAdd: function(section, prefmt, extra_class) {
+	renderSectionAdd: function(section, prefmt, LC, extra_class) {
 		var el = form.GridSection.prototype.renderSectionAdd.apply(section, [ extra_class ]),
 			nameEl = el.querySelector('.cbi-section-create-name');
 		ui.addValidator(nameEl, 'uciname', true, (v) => {
@@ -232,6 +232,9 @@ return baseclass.extend({
 			if (!v) {
 				button.disabled = true;
 				return true;
+			} else if (LC && (v !== v.toLowerCase())) {
+				button.disabled = true;
+				return _('Expecting: %s').format(_('Lowercase only'));
 			} else if (uci.get(uciconfig, v)) {
 				button.disabled = true;
 				return _('Expecting: %s').format(_('unique UCI identifier'));

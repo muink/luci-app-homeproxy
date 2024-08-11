@@ -88,7 +88,7 @@ return view.extend({
 		s.nodescriptions = true;
 		s.modaltitle = L.bind(hp.loadModalTitle, this, _('Server'), _('Add a server'), data[0]);
 		s.sectiontitle = L.bind(hp.loadDefaultLabel, this, data[0]);
-		s.renderSectionAdd = L.bind(hp.renderSectionAdd, this, s, prefmt);
+		s.renderSectionAdd = L.bind(hp.renderSectionAdd, this, s, prefmt, false);
 		s.handleAdd = L.bind(hp.handleAdd, this, s, prefmt);
 
 		o = s.option(form.Value, 'label', _('Label'));
