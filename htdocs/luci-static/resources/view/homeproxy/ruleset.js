@@ -13,6 +13,8 @@
 
 'require homeproxy as hp';
 
+const docdata = 'base64,' + 'cmxzdHBsYWNlaG9sZGVy'
+
 function parseRulesetLink(uri) {
 	var config,
 		filefmt = new RegExp(/^(json|srs)$/),
@@ -99,7 +101,7 @@ return view.extend({
 			ui.showModal(_('Import rule-set links'), [
 				E('p', _('Supports rule-set links of type: <code>local, remote</code> and format: <code>source, binary</code>.</br>') +
 							_('Please refer to <a href="%s" target="_blank">%s</a> for link format standards.')
-								.format(_('https://github.com/muink/luci-app-homeproxy/blob/master/docs/Ruleset-URI-Scheme.md'),_('Ruleset-URI-Scheme'))),
+								.format('data:text/html;' + docdata, _('Ruleset-URI-Scheme'))),
 				textarea.render(),
 				E('div', { class: 'right' }, [
 					E('button', {
