@@ -103,7 +103,10 @@ const clash_api_enabled = uci.get(uciconfig, uciexp, 'clash_api_enabled'),
 const mixed_port = uci.get(uciconfig, uciinfra, 'mixed_port') || '5330';
 let self_mark, redirect_port, tproxy_port,
     tun_name, tun_addr4, tun_addr6, tun_mtu, tun_gso,
-    tcpip_stack, endpoint_independent_nat;
+    tcpip_stack, endpoint_independent_nat, udp_timeout;
+udp_timeout = uci.get(uciconfig, 'infra', 'udp_timeout');
+if (routing_mode === 'custom')
+	udp_timeout = uci.get(uciconfig, uciroutingsetting, 'udp_timeout');
 if (match(proxy_mode, /redirect/)) {
 	self_mark = uci.get(uciconfig, 'infra', 'self_mark') || '100';
 	redirect_port = uci.get(uciconfig, 'infra', 'redirect_port') || '5331';
@@ -116,7 +119,7 @@ if (match(proxy_mode), /tun/) {
 	tun_addr4 = uci.get(uciconfig, uciinfra, 'tun_addr4') || '172.19.0.1/30';
 	tun_addr6 = uci.get(uciconfig, uciinfra, 'tun_addr6') || 'fdfe:dcba:9876::1/126';
 	tun_mtu = uci.get(uciconfig, uciinfra, 'tun_mtu') || '9000';
-	tun_gso = '0';
+	tun_gso = uci.get(uciconfig, uciinfra, 'tun_gso') || '0';
 	tcpip_stack = 'system';
 	if (routing_mode === 'custom') {
 		tun_gso = uci.get(uciconfig, uciroutingsetting, 'tun_gso') || '0';
@@ -250,6 +253,10 @@ function generate_outbound(node) {
 		/* Direct */
 		override_address: node.override_address,
 		override_port: strToInt(node.override_port),
+		proxy_protocol: (node.proxy_protocol === '1') ? {
+			enabled: true,
+			version: strToInt(node.proxy_protocol_version)
+		} : null,
 		/* Hysteria (2) */
 		up_mbps: strToInt(node.hysteria_up_mbps),
 		down_mbps: strToInt(node.hysteria_down_mbps),
@@ -573,6 +580,7 @@ push(config.inbounds, {
 	tag: 'mixed-in',
 	listen: '::',
 	listen_port: int(mixed_port),
+	udp_timeout: udp_timeout ? (udp_timeout + 's') : null,
 	sniff: true,
 	sniff_override_destination: (sniff_override === '1'),
 	set_system_proxy: false
@@ -596,6 +604,7 @@ if (match(proxy_mode, /tproxy/))
 		listen: '::',
 		listen_port: int(tproxy_port),
 		network: 'udp',
+		udp_timeout: udp_timeout ? (udp_timeout + 's') : null,
 		sniff: true,
 		sniff_override_destination: (sniff_override === '1')
 	});
@@ -611,6 +620,7 @@ if (match(proxy_mode, /tun/))
 		gso: (tun_gso === '1'),
 		auto_route: false,
 		endpoint_independent_nat: strToBool(endpoint_independent_nat),
+		udp_timeout: udp_timeout ? (udp_timeout + 's') : null,
 		stack: tcpip_stack,
 		sniff: true,
 		sniff_override_destination: (sniff_override === '1'),

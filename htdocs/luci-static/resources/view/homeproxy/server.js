@@ -279,7 +279,7 @@ return view.extend({
 		o.depends('type', 'tuic');
 		o.modalonly = true;
 
-		o = s.option(form.ListValue, 'tuic_auth_timeout', _('Auth timeout'),
+		o = s.option(form.Value, 'tuic_auth_timeout', _('Auth timeout'),
 			_('How long the server should wait for the client to send the authentication command (in seconds).'));
 		o.datatype = 'uinteger';
 		o.default = '3';
@@ -715,6 +715,13 @@ return view.extend({
 		o = s.option(form.Flag, 'udp_fragment', _('UDP Fragment'),
 			_('Enable UDP fragmentation.'));
 		o.default = o.disabled;
+		o.depends({'network': 'tcp', '!reverse': true});
+		o.modalonly = true;
+
+		o = s.option(form.Value, 'udp_timeout', _('UDP NAT expiration time'),
+			_('In seconds. <code>300</code> is used by default.'));
+		o.datatype = 'uinteger';
+		o.default = '300';
 		o.depends({'network': 'tcp', '!reverse': true});
 		o.modalonly = true;
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: GPL-3.0-only
+ * SPDX-License-Identifier: GPL-2.0-only
  *
  * Copyright (C) 2022 ImmortalWrt.org
  */
@@ -471,6 +471,18 @@ function renderNodeSettings(section, data, features, main_node, routing_mode, su
 		_('Override the connection destination port.'));
 	o.datatype = 'port';
 	o.depends('type', 'direct');
+	o.modalonly = true;
+
+	o = s.option(form.Flag, 'proxy_protocol', _('Proxy protocol'),
+		_('Write proxy protocol in the connection header.'));
+	o.depends('type', 'direct');
+	o.modalonly = true;
+
+	o = s.option(form.ListValue, 'proxy_protocol_version', _('Proxy protocol version'));
+	o.value('1', _('v1'));
+	o.value('2', _('v2'));
+	o.default = '2';
+	o.depends('proxy_protocol', '1');
 	o.modalonly = true;
 
 	/* Hysteria (2) config start */
