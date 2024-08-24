@@ -55,6 +55,7 @@ function handleGenKey(option) {
 		required_method = this.section.getOption('shadowsocks_encrypt_method')?.formvalue(section_id);
 
 	switch (required_method) {
+		/* AEAD */
 		case 'aes-128-gcm':
 		case '2022-blake3-aes-128-gcm':
 			password = hp.generateRand('base64', 16);
@@ -69,12 +70,15 @@ function handleGenKey(option) {
 		case '2022-blake3-chacha20-poly1305':
 			password = hp.generateRand('base64', 32);
 			break;
+		/* NONE */
 		case 'none':
 			password = '';
 			break;
+		/* UUID */
 		case 'uuid':
 			password = hp.generateRand('uuid');
 			break;
+		/* PLAIN */
 		default:
 			password = hp.generateRand('hex', 16);
 			break;
