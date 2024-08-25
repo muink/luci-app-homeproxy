@@ -1,12 +1,17 @@
+#!/bin/bash
 PKG_NAME="$1"
 CURDIR="$2"
 PKG_BUILD_DIR="$3"
 PKG_BUILD_BIN="$PKG_BUILD_DIR/bin"
+export PATH="$PATH:$PKG_BUILD_BIN"
 OS=linux
 ARCH=amd64
+JQVERSION=1.7.1
 DOCNAME=Ruleset-URI-Scheme
 
 mkdir -p "$PKG_BUILD_BIN"
+curl -L "https://github.com/jqlang/jq/releases/download/jq-${JQVERSION}/jq-${OS}-${ARCH}" -o "$PKG_BUILD_BIN"/jq
+chmod +x "$PKG_BUILD_BIN"/jq
 latest="$(curl -L https://api.github.com/repos/kpym/gm/releases/latest | jq -rc '.tag_name' 2>/dev/null)"
 curl -L "https://github.com/kpym/gm/releases/download/${latest}/gm_${latest#v}_Linux_64bit.tar.gz" -o- | tar -xz -C "$PKG_BUILD_BIN"
 latest="$(curl -L https://api.github.com/repos/tdewolff/minify/releases/latest | jq -rc '.tag_name' 2>/dev/null)"
@@ -15,7 +20,7 @@ chmod -R +x "$PKG_BUILD_BIN"
 
 cp "$CURDIR"/docs/$DOCNAME.md "$PKG_BUILD_DIR"
 pushd "$PKG_BUILD_DIR"
-"$PKG_BUILD_BIN"/gm $DOCNAME.md
+gm $DOCNAME.md
 p=$(sed -n '/github.min.css/=' $DOCNAME.html)
 {
 head -n$(( $p -1 )) $DOCNAME.html
@@ -25,7 +30,7 @@ echo '</style>'
 tail -n +$(( $p +1 )) $DOCNAME.html
 } > buildin.html
 popd
-"$PKG_BUILD_BIN"/minify "$PKG_BUILD_DIR"/buildin.html | base64 | tr -d '\n' > "$PKG_BUILD_DIR"/base64
+minify "$PKG_BUILD_DIR"/buildin.html | base64 | tr -d '\n' > "$PKG_BUILD_DIR"/base64
 sed -i "s|'cmxzdHBsYWNlaG9sZGVy'|'$(cat "$PKG_BUILD_DIR"/base64)'|" "$PKG_BUILD_DIR"/htdocs/luci-static/resources/view/homeproxy/ruleset.js
 
 if [ -d "$CURDIR/.git" ]; then
