@@ -36,11 +36,17 @@ Generation steps:
 
 ### QueryParameters
 
-+ `file`: Available values ​​refer to **Rulefmt**.
++ `file`: Required. Available values ​​refer to **Rulefmt**.
++ `rawquery`: Optional. Available values ​​refer to **rawQuery**.
 
 #### Rulefmt
 
 Can be `json` or `srs`. Rule file format.
+
+#### rawQuery
+
+This parameter is required if the original link contains a url query.  
+Encrypt the part `key1=value1&key2=value2` after `?` in the original link with `encodeURIComponent` and use it as the payload of this parameter.
 
 ### URIFragment
 

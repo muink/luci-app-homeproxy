@@ -27,16 +27,18 @@ function parseRulesetLink(uri) {
 		case 'https':
 			var url = new URL('http://' + uri[1]);
 			var file = url.searchParams.get('file');
+			var rawquery = url.searchParams.get('rawquery');
 			var name = decodeURIComponent(url.pathname.split('/').pop())
 				.replace(/[\s\.-]/g, '_').replace(unuciname, '');
 
 			if (filefmt.test(file)) {
+				var fullpath = (url.username ? url.username + '@' : '') + url.host + url.pathname + (rawquery ? '?' + decodeURIComponent(rawquery) : '');
 				config = {
 					label: url.hash ? decodeURIComponent(url.hash.slice(1)) : name ? name : null,
 					type: 'remote',
 					format: file.match(/^json$/) ? 'source' : file.match(/^srs$/) ? 'binary' : 'unknown',
-					url: String.format('%s://%s%s%s', uri[0], url.username ? url.username + '@' : '', url.host, url.pathname),
-					href: String.format('http://%s%s%s', url.username ? url.username + '@' : '', url.host, url.pathname)
+					url: String.format('%s://%s', uri[0], fullpath),
+					href: String.format('http://%s', fullpath)
 				};
 			}
 
@@ -95,7 +97,7 @@ return view.extend({
 		/* Import rule-set links start */
 		s.handleLinkImport = function() {
 			var textarea = new ui.Textarea('', {
-				'placeholder': 'http(s)://github.com/sagernet/sing-geoip/raw/rule-set/geoip-hk.srs?file=srs#GeoIP-HK\n' +
+				'placeholder': 'http(s)://github.com/sagernet/sing-geoip/raw/rule-set/geoip-hk.srs?file=srs&rawquery=good%3Djob#GeoIP-HK\n' +
 							   'file:///etc/homeproxy/ruleset/example.json?file=json#Example%20file\n'
 			});
 			ui.showModal(_('Import rule-set links'), [
