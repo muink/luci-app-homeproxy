@@ -255,6 +255,14 @@ return view.extend({
 		o.default = 'direct-out';
 		o.rmempty = false;
 		//o.editable = true;
+		o.textvalue = function(section_id) {
+			var cval = this.cfgvalue(section_id) || this.default;
+			var remote = L.bind(function() {
+				let cval = this.cfgvalue(section_id) || this.default;
+				return (cval === 'remote') ? true : false;
+			}, s.getOption('type'))
+			return remote() ? cval : _('none');
+		};
 		o.depends('type', 'remote');
 
 		o = s.option(form.Value, 'update_interval', _('Update interval'),
