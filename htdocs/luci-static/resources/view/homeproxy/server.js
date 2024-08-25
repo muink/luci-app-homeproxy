@@ -6,9 +6,11 @@
 
 'use strict';
 'require form';
+'require fs';
 'require poll';
 'require rpc';
 'require uci';
+'require ui';
 'require view';
 
 'require homeproxy as hp';
@@ -71,6 +73,17 @@ return view.extend({
 		}
 
 		s = m.section(form.NamedSection, 'server', 'homeproxy', _('Global settings'));
+
+		o = s.option(form.Button, '_reload_server', _('Quick Reload'));
+		o.inputtitle = _('Reload');
+		o.inputstyle = 'apply';
+		o.onclick = function() {
+			return fs.exec('/etc/init.d/homeproxy', ['reload', 'server'])
+				.then((res) => { return window.location = window.location.href.split('#')[0] })
+				.catch((e) => {
+					ui.addNotification(null, E('p', _('Failed to execute "/etc/init.d/homeproxy %s %s" reason: %s').format('reload', 'server', e)));
+				});
+		};
 
 		o = s.option(form.Flag, 'enabled', _('Enable'));
 		o.default = o.disabled;
